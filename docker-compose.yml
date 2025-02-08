@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio
+    container_name: minio
+    environment:
+      - MINIO_ROOT_USER=test-id
+      - MINIO_ROOT_PASSWORD=test-key
+    command: server --console-address ":9001" /data
+    volumes:
+      - ./minio-data:/data
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+
+  awslocal:
+    image: amazon/aws-cli
+    container_name: awslocal
+    entrypoint: ['/bin/sh', '-c']
+    command:
+      - '-c'
+      - |
+        while !  curl -o /dev/null -s -w "%{http_code}\n" http://minio:9000/minio/health/live | grep -q '200'; do
+        echo 'Waiting for MinIO to be ready...';
+        sleep 5;
+        done &&
+        echo 'MinIO is healthy.' &&
+        echo 'Listing S3 buckets...' &&
+        if aws --endpoint-url=http://minio:9000 s3 ls | grep -q 'movie-bucket'; then
+        echo 'Bucket \"movie-bucket\" already exists.';
+        else
+        echo 'Bucket \"movie-bucket\" does not exist. Creating it...';
+        aws --endpoint-url=http://minio:9000 s3 mb s3://movie-bucket &&
+        echo 'Bucket \"movie-bucket\" created successfully.';
+        fi
+    environment:
+      - AWS_ACCESS_KEY_ID=test-id
+      - AWS_SECRET_ACCESS_KEY=test-key
+    depends_on:
+      - minio
+    
+  movie-redis: 
+    image: redis
+    container_name: movie-redis
+    ports:
+      - '6379:6379'
+    

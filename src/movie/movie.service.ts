@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
+import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
 export class MovieServices {
   constructor(
     @InjectQueue('video-transform')
     private readonly videoEncodingQueue: Queue,
+    private readonly S3Service: S3Service,
   ) {}
 
   async uploadMovie(
@@ -15,6 +17,7 @@ export class MovieServices {
   ): Promise<string> {
     console.log(inputFilePath, outputPath);
 
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const workCount = await this.videoEncodingQueue.getActiveCount();
     if (workCount > 5) {
       return 'Too many movies being processed. Please try again later';
