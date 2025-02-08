@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import { scanFolder } from 'src/utils/upload.utils';
+import { scanFolder } from 'src/movie/movie.utils';
 
 @Injectable()
 export class S3Service {
@@ -11,14 +11,6 @@ export class S3Service {
   }
 
   uploadHLSToS3(folderPath: string, S3Path: string, filename: string) {
-    console.log(folderPath, S3Path);
     scanFolder(folderPath, this.s3Client, filename);
-    this.s3.headBucket({ Bucket: 'movie-bucket' }, (err, data) => {
-      if (err) {
-        this.logger.error('loi');
-      } else {
-        this.logger.log(data);
-      }
-    });
   }
 }
