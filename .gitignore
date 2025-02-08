@@ -5,6 +5,7 @@
 
 /uploads
 /processed
+/minio-data
 
 # Logs
 logs

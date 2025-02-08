@@ -4,6 +4,7 @@ import { MovieServices } from './movie.service';
 import { DockerModule } from 'src/docker/docker.module';
 import { BullModule } from '@nestjs/bull';
 import { VideoTranscodingProcessor } from 'src/movie/transcodeVideo.worker';
+import { S3Module } from 'src/s3/s3.module';
 @Module({
   imports: [
     DockerModule,
@@ -14,6 +15,7 @@ import { VideoTranscodingProcessor } from 'src/movie/transcodeVideo.worker';
         port: 6379,
       },
     }),
+    S3Module,
   ],
   controllers: [MovieController],
   providers: [MovieServices, VideoTranscodingProcessor],
