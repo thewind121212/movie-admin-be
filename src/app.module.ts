@@ -4,10 +4,9 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { MovieModule } from './movie/movie.module';
 import { CategoryModule } from './category/category.module';
-import { DockerModule } from './docker/docker.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), MovieModule, CategoryModule, DockerModule],
+  imports: [ConfigModule.forRoot(), MovieModule, CategoryModule],
   controllers: [AppController],
   providers: [AppService],
 })

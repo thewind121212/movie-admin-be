@@ -1,4 +1,4 @@
-import { Controller, UseInterceptors, Post, Body } from '@nestjs/common';
+import { Controller, UseInterceptors, Post, Body, Req } from '@nestjs/common';
 import { MovieServices } from './movie.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -21,14 +21,18 @@ export class MovieController {
           //   const uniqueSuffix =
           //     Date.now() + '-' + Math.round(Math.random() * 1e9);
           //   const ext = extname(file.originalname as string);
-          cb(null, `${file.originalname as string}`);
+          req['uploadedFileName'] = file.originalname;
+          cb(null, `${file.originalname}`);
         },
       }),
-      limits: { fileSize: 20 * 1024 * 1024 },
     }),
   )
-  uploadFile(@Body() body: any): string {
-    console.log(body);
-    return 'upload file';
+  async uploadRoute(@Body() body: any, @Req() req: Request): Promise<string> {
+    const movieName = req['uploadedFileName'];
+    const data = await this.movieServices.uploadMovie(
+      `/uploads/${movieName}`,
+      'video',
+    );
+    return data;
   }
 }
