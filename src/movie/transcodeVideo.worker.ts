@@ -18,7 +18,9 @@ export class VideoTranscodingProcessor {
 
     console.log(`Transcoding video from ${videoPath} begins...`);
 
-    await this.dockerServices.runFFmpegDocker(videoPath, outputPath);
+    console.log(outputPath);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // await this.dockerServices.runFFmpegDocker(videoPath, outputPath);
 
     return { success: true, message: 'Video transcoding completed!' };
   }

@@ -10,6 +10,12 @@ export class S3Service {
   }
 
   uploadHLSToS3() {
-    return 'pong';
+    this.s3.headBucket({ Bucket: 'movie-bucket' }, (err, data) => {
+      if (err) {
+        this.logger.error('loi');
+      } else {
+        this.logger.log(data);
+      }
+    });
   }
 }

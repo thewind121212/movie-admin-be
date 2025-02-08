@@ -19,5 +19,5 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "exclude": ["uploads", "progressed"]
+  "exclude": ["uploads", "progressed", "node_modules"]
 }
