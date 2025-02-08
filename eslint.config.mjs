@@ -1,12 +1,14 @@
 // @ts-check
 import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
+import eslintPluginPrettierRecommended, {
+  ignores,
+} from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'node_modules/', 'dist/', 'uploads/', 'processed/'],
+    ignores: ['eslint.config.mjs', 'node_modules/', 'uploads/', '/processed'],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -30,15 +32,15 @@ export default tseslint.config(
     rules: {
       // Allow usage of "any"
       '@typescript-eslint/no-explicit-any': 'off',
-      "@typescript-eslint/no-unsafe-assignment": "off",
-      "@typescript-eslint/no-unsafe-call": "off",
-      "@typescript-eslint/no-unsafe-member-access": "off",
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       // Relax the rule to allow intentionally unawaited promises (via void)
       '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true }],
-      "no-unused-vars": "warn",
+      'no-unused-vars': 'warn',
 
       // If you find no-unsafe-argument too restrictive, you can disable it:
-      '@typescript-eslint/no-unsafe-argument': 'off'
+      '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
 );

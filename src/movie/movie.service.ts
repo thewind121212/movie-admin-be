@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { S3Service } from 'src/s3/s3.service';
 
 @Injectable()
 export class MovieServices {
   constructor(
     @InjectQueue('video-transform')
     private readonly videoEncodingQueue: Queue,
-    private readonly S3Service: S3Service,
   ) {}
 
   async uploadMovie(
