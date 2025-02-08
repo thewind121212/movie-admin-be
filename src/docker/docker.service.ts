@@ -53,6 +53,7 @@ export class DockerService {
 
             await container.start();
             await container.wait();
+            void container.remove();
 
             this.logger.log(`FFmpeg completed successfully!`);
         } catch (error) {
