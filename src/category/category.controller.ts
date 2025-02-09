@@ -1,34 +1,25 @@
-import { Controller, UseInterceptors, Post, Body } from '@nestjs/common';
+import { Controller, Body, Get, Post, Response, HttpStatus } from '@nestjs/common';
 import { MovieServices } from './category.service';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { Response as ExpressResponse } from 'express';
 // import { extname } from 'path';
 
-@Controller('movie')
+@Controller('category')
 export class MovieController {
-  constructor(private readonly movieServices: MovieServices) {}
+  constructor(private readonly movieServices: MovieServices) { }
 
-  @Post()
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (
-          req: Express.Request,
-          file: Express.Multer.File,
-          cb: (error: Error | null, filename: string) => void,
-        ) => {
-          //   const uniqueSuffix =
-          //     Date.now() + '-' + Math.round(Math.random() * 1e9);
-          //   const ext = extname(file.originalname as string);
-          cb(null, `${file.originalname as string}`);
-        },
-      }),
-      limits: { fileSize: 20 * 1024 * 1024 },
-    }),
-  )
-  uploadFile(@Body() body: any): string {
-    console.log(body);
-    return 'upload file';
+  @Get('list')
+  async getCategory(): Promise<string> {
+    return this.movieServices.listAllCategory();
+  }
+
+  @Post('create')
+  async createCategory(
+    @Body('name') name: string,
+    @Body('description') description: string,
+    @Response() res: ExpressResponse
+  ) {
+
+    const { statusCode, message, status, data } = await this.movieServices.createCategory(name, description);
+    return res.status(statusCode).send({ message, status, data });
   }
 }

@@ -39,10 +39,20 @@ services:
       - AWS_SECRET_ACCESS_KEY=test-key
     depends_on:
       - minio
-    
-  movie-redis: 
+
+  movie-redis:
     image: redis
     container_name: movie-redis
     ports:
       - '6379:6379'
-    
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: linhporo1
+      POSTGRES_DB: admin_movie
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data

@@ -6,6 +6,7 @@
 /uploads
 /processed
 /minio-data
+/postgres_data
 
 # Logs
 logs
