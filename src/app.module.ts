@@ -3,10 +3,10 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { MovieModule } from './core/movie/movie.module';
-import { CategoryModule } from './core/category/category.module';
+import { GenreModule } from './core/genre/genre.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), MovieModule, CategoryModule],
+  imports: [ConfigModule.forRoot(), MovieModule, GenreModule],
   controllers: [AppController],
   providers: [AppService],
 })
