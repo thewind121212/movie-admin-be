@@ -1,16 +1,11 @@
 import { Controller, Body, Get, Post, Response, HttpStatus } from '@nestjs/common';
-import { MovieServices } from './category.service';
+import { CategoryService } from '../../core/category/servies/category.service';
 import { Response as ExpressResponse } from 'express';
 // import { extname } from 'path';
 
 @Controller('category')
 export class MovieController {
-  constructor(private readonly movieServices: MovieServices) { }
-
-  @Get('list')
-  async getCategory(): Promise<string> {
-    return this.movieServices.listAllCategory();
-  }
+  constructor(private readonly categoryService: CategoryService) { }
 
   @Post('create')
   async createCategory(
@@ -19,7 +14,7 @@ export class MovieController {
     @Response() res: ExpressResponse
   ) {
 
-    const { statusCode, message, status, data } = await this.movieServices.createCategory(name, description);
+    const { statusCode, message, status, data } = await this.categoryService.createCategory(name, description);
     return res.status(statusCode).send({ message, status, data });
   }
 }

@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
-import { scanFolder } from 'src/movie/movie.utils';
+import { scanFolder } from 'src/core/movie/movie.utils';
 
 @Injectable()
 export class S3Service {
