@@ -1,5 +1,5 @@
 import { Controller, UseInterceptors, Post, Body, Req } from '@nestjs/common';
-import { MovieServices } from './movie.service';
+import { MovieServices } from '../../core/movie/movie.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 // import { extname } from 'path';

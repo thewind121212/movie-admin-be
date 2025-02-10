@@ -1,8 +1,8 @@
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
 import { Injectable } from '@nestjs/common';
-import { DockerService } from 'src/docker/docker.service';
-import { S3Service } from 'src/s3/s3.service';
+import { DockerService } from 'src/Infrastructure/docker/docker.service';
+import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import path from 'path';
 
 @Injectable()
