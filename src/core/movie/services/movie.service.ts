@@ -15,16 +15,18 @@ export class MovieServices {
   ): Promise<string> {
     console.log(inputFilePath, outputPath);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const workCount = await this.videoEncodingQueue.getActiveCount();
-    if (workCount > 5) {
-      return 'Too many movies being processed. Please try again later';
-    }
+    
 
-    void this.videoEncodingQueue.add('video-transcoding', {
-      videoPath: inputFilePath,
-      outputPath: outputPath,
-    });
+
+    // const workCount = await this.videoEncodingQueue.getActiveCount();
+    // if (workCount > 5) {
+    //   return 'Too many movies being processed. Please try again later';
+    // }
+
+    // void this.videoEncodingQueue.add('video-transcoding', {
+    //   videoPath: inputFilePath,
+    //   outputPath: outputPath,
+    // });
     return 'Movie processing started';
   }
 

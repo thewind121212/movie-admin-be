@@ -23,7 +23,6 @@ export class VideoTranscodingProcessor {
 
     console.log(`Transcoding video from ${videoPath} begins...`);
 
-    console.log(outputPath);
     await new Promise((resolve) => setTimeout(resolve, 1000));
     await this.dockerServices.runFFmpegDocker(videoPath, outputPath);
     const filename = videoPath.replace('/uploads', '').split('.')[0];

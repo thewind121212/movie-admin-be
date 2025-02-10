@@ -5,17 +5,17 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class CategoryRepository {
+export class GenreRepository {
     constructor(private prisma: PrismaService,) { }
 
     //create category
-    async createCategory(name: string, description: string): Promise<{
+    async createGenre(name: string, description: string): Promise<{
         status: boolean,
         message: string,
         id?: string,
     }> {
         try {
-            const data = await this.prisma.movieCategory.create({
+            const data = await this.prisma.movieGenre.create({
                 data: {
                     name: name,
                     description: description!,
@@ -41,7 +41,7 @@ export class CategoryRepository {
         message: string
     }> {
         try {
-            const isHave = await this.prisma.movieCategory.findFirst({
+            const isHave = await this.prisma.movieGenre.findFirst({
                 where: {
                     name: name,
                 }

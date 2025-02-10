@@ -13,13 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model MovieCategory {
+model MovieGenre {
   id        String   @id @default(cuid())  
   name      String
   description String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  movies    Movie[]  @relation("MovieCategory")
+  movies    Movie[]  @relation("MovieGenre")
 }
 
 
@@ -39,7 +39,7 @@ model Movie {
   duration      Int
   rating        Float
   coverImageUrl String
-  categories    MovieCategory[] @relation("MovieCategory")
+  categories    MovieGenre[] @relation("MovieGenre")
   trailerUrl    String
   typeId        String        
   type          MovieType     @relation(fields: [typeId], references: [id])

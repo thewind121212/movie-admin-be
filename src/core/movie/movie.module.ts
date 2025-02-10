@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { MovieController } from '../../presentation/controllers/movie.controller';
-import { MovieServices } from './movie.service';
+import { MovieServices } from './services/movie.service';
 import { DockerModule } from 'src/Infrastructure/docker/docker.module';
 import { BullModule } from '@nestjs/bull';
 import { VideoTranscodingProcessor } from 'src/core/movie/transcodeVideo.worker';

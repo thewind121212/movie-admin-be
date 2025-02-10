@@ -1,12 +1,12 @@
 //Movie Cateory Entity
 
 
-export class Category {
-    private _id: string | null;
-    private _name: string;
-    private _description: string | null;
-    private _createdAt: Date;
-    private _updatedAt: Date;
+export class Genre {
+    public _id: string | null;
+    public _name: string;
+    public _description: string | null;
+    public _createdAt: Date;
+    public _updatedAt: Date;
 
     constructor(id: string | null, name: string, description: string | null, createdAt: Date, updatedAt: Date) {
         this._id = id;
@@ -25,18 +25,18 @@ export class Category {
         if (!name || name.trim() === "") {
             return {
                 isValid: false,
-                message: "Category name is required"
+                message: "Genre name is required"
             }
         }
         if (name.length < 3) {
             return {
                 isValid: false,
-                message: "Category name must be at least 3 characters long"
+                message: "Genre name must be at least 3 characters long"
             }
         }
         return {
             isValid: true,
-            message: "Category name is valid"
+            message: "Genre name is valid"
         }
     }
 
@@ -47,12 +47,12 @@ export class Category {
         if (description && description.length < 3) {
             return {
                 isValid: false,
-                message: "Category description must be at least 3 characters long"
+                message: "Genre description must be at least 3 characters long"
             }
         }
         return {
             isValid: true,
-            message: "Category description is valid"
+            message: "Genre description is valid"
         }
     }
 

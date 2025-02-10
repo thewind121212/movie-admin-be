@@ -1,9 +1,9 @@
 
 import { HttpStatus } from '@nestjs/common';
-import { Category } from '../category.entity'
-import { CategoryRepository } from '../category.repositories';
+import { Genre } from '../genre.entity'
+import { GenreRepository } from '../genre.repositories';
 
-export async function createCategory(name: string, description: string, categoryRepository : CategoryRepository): Promise<{
+export async function createGenre(name: string, description: string, genreRepository :GenreRepository): Promise<{
     statusCode: HttpStatus,
     message: string,
     status: string,
@@ -11,7 +11,7 @@ export async function createCategory(name: string, description: string, category
 }> {
     // Validate and create the entity
 
-    const [isValidName, isValidDescription] = [Category.isValidName(name), Category.isValidDescription(description)];
+    const [isValidName, isValidDescription] = [Genre.isValidName(name), Genre.isValidDescription(description)];
 
     if (!isValidName.isValid) {
         return {
@@ -32,7 +32,7 @@ export async function createCategory(name: string, description: string, category
     }
 
 
-    const isExist = await categoryRepository.checkIfCategoryExist(name);
+    const isExist = await genreRepository.checkIfCategoryExist(name);
     if (isExist.isExist) {
         return {
             statusCode: HttpStatus.BAD_REQUEST,
@@ -43,7 +43,7 @@ export async function createCategory(name: string, description: string, category
     }
 
 
-    const { status, message, id } = await categoryRepository.createCategory(name, description);
+    const { status, message, id } = await genreRepository.createGenre(name, description);
 
 
     if (!status) {
