@@ -33,17 +33,27 @@ model MovieType {
 
 model Movie {
   id            String        @id @default(cuid())  
-  title         String
+  name          String
   description   String
-  releaseDate   DateTime
+  releaseYear   DateTime
   duration      Int
-  rating        Float
-  coverImageUrl String
-  categories    MovieGenre[] @relation("MovieGenre")
-  trailerUrl    String
+  thumbnailUrl  String
+  hlsFilePathS3 String
+  views         Int
+  likes         Int
+  dislikes      Int
+  status        MovieStatus   @default(UPLOADED)
+  generes       MovieGenre[]  @relation("MovieGenre")
+  isPublished   Boolean       @default(false)
   typeId        String        
   type          MovieType     @relation(fields: [typeId], references: [id])
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
 
+
+enum MovieStatus {
+  UPLOADED  
+  CONVERTING
+  COMPLETED
+}

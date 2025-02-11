@@ -5,6 +5,8 @@ import { DockerModule } from 'src/Infrastructure/docker/docker.module';
 import { BullModule } from '@nestjs/bull';
 import { VideoTranscodingProcessor } from 'src/core/movie/transcodeVideo.worker';
 import { S3Module } from 'src/Infrastructure/s3/s3.module';
+import { RedisService } from 'src/Infrastructure/redis/redis.service';
+import { MovieRepository } from './movie.repositories';
 @Module({
   imports: [
     DockerModule,
@@ -18,6 +20,6 @@ import { S3Module } from 'src/Infrastructure/s3/s3.module';
     S3Module,
   ],
   controllers: [MovieController],
-  providers: [MovieServices, VideoTranscodingProcessor],
+  providers: [MovieServices, VideoTranscodingProcessor, RedisService, MovieRepository],
 })
 export class MovieModule {}
