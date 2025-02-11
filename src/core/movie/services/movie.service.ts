@@ -1,13 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
+import { RedisService } from 'src/Infrastructure/redis/redis.service';
+import { Movie } from '../movie.entity';
+import { ResponseType } from 'src/interface/response.interface';
+import { hashTheTicket } from '../movie.utils';
+import { MovieRepository } from '../movie.repositories';
 
 @Injectable()
 export class MovieServices {
   constructor(
     @InjectQueue('video-transform')
     private readonly videoEncodingQueue: Queue,
-  ) {}
+    private readonly redisService: RedisService,
+    private readonly movieRepository: MovieRepository
+  ) { }
 
   async uploadMovie(
     inputFilePath: string,
@@ -15,7 +22,7 @@ export class MovieServices {
   ): Promise<string> {
     console.log(inputFilePath, outputPath);
 
-    
+    this.redisService.set('movie', 'processing', 3600);
 
 
     // const workCount = await this.videoEncodingQueue.getActiveCount();
@@ -30,5 +37,41 @@ export class MovieServices {
     return 'Movie processing started';
   }
 
-  
+  async registerMovieUploadTicket(
+    name: string,
+    description: string,
+    genres: string[],
+    releaseYear: number,
+  ): Promise<ResponseType> {
+    const isValidRegister = Movie.validateRegisterUploadTicket(name, description, genres, releaseYear)
+    if (!isValidRegister.isValid) {
+      return {
+        message: isValidRegister.message,
+        status: 'error',
+        data: null,
+        created_at: new Date()
+      }
+    }
+
+    const hashTicket = hashTheTicket(name, description, releaseYear);
+    const ticket = await this.movieRepository.registerTicket(hashTicket);
+
+    if (!ticket.completed) {
+      return {
+        message: 'Failed to register movie upload ticket',
+        status: 'error',
+        data: null,
+        created_at: new Date()
+      }
+    }
+
+    return {
+      message: 'Movie upload ticket registered',
+      status: 'success',
+      data: null,
+      created_at: new Date()
+    }
+  }
+
+
 }

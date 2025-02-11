@@ -7,16 +7,16 @@ export class Movie {
     public _description?: string | null;
     public _createdAt: Date
     public _updatedAt: Date;
-    public _category: string[] | null;
-    public _isDeleted: boolean;
+    public _genres: string[] | null;
     public _mp4FilePath?: string;
+    public _releaseYear: number;
     public _hlsFilePathS3: string | null;
     public _duration: number;
     public _thumbnail: string;
     public _views: number;
     public _likes: number;
     public _dislikes: number;
-    public _status: ['uploaded', 'converting', 'completed']; 
+    public _status: ['UPLOADED', 'CONVERTING', 'COMPLETED'];
     public _isPublished: boolean;
 
 
@@ -28,10 +28,53 @@ export class Movie {
         this._updatedAt = updatedAt;
     }
 
+
+    //validate
+
+
+    static validateRegisterUploadTicket(
+        name: string,
+        description: string,
+        genres: string[],
+        releaseYear: number
+    ) : {
+        isValid: boolean,
+        message: string,
+    } {
+        if (!name) {
+            return {
+                isValid: false,
+                message: 'Missing name movie'
+            }
+        }
+        if (!description) {
+            return {
+                isValid: false,
+                message: 'Missing description movie'
+            }
+        }
+        if (!genres) {
+            return {
+                isValid: false,
+                message: 'Missing genres movie'
+            }
+        }
+        if (!releaseYear) {
+            return {
+                isValid: false,
+                message: 'Missing release year movie'
+            }
+        }
+        return {
+            isValid: true,
+            message: 'Valid'
+        }
+    }
+
     //Setter or Mutator
 
-    setCategory(category: string[]) {
-        this._category = category;
+    setCategory(genres: string[]) {
+        this._genres = genres;
     }
 
     setMp4FilePath(mp4FilePath: string) {
@@ -62,7 +105,7 @@ export class Movie {
         this._dislikes = dislikes;
     }
 
-    setStatus(status: ['uploaded', 'converting', 'completed']) {
+    setStatus(status: ['UPLOADED', 'CONVERTING', 'COMPLETED']) {
         this._status = status;
     }
 
