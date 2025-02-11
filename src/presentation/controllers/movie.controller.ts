@@ -1,46 +1,36 @@
-import { Controller, UseInterceptors, Post, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, UseInterceptors, Post, Body, Req, UseGuards, UploadedFile } from '@nestjs/common';
 import { ResponseType } from '../../interface/response.interface';
 import { MovieServices } from '../../core/movie/services/movie.service';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { MovieGuard } from 'src/core/movie/movie.guard';
-// import { extname } from 'path';
+import { S3Service } from 'src/Infrastructure/s3/s3.service';
+import { RAW_MOVIE_BUCKET } from 'src/core/movie/movie.config';
+import path from 'path';
+
 
 @Controller('movie')
 export class MovieController {
-  constructor(private readonly movieServices: MovieServices) { }
+  constructor(private readonly movieServices: MovieServices,
+    public readonly S3services: S3Service,
+  ) { }
 
 
   @Post('upload/uploadMovie')
   @UseGuards(MovieGuard)
-  // @UseInterceptors(
-  //   FileInterceptor('file', {
-  //     storage: diskStorage({
-  //       destination: './uploads',
-  //       filename: (
-  //         req: Express.Request,
-  //         file: Express.Multer.File,
-  //         cb: (error: Error | null, filename: string) => void,
-  //       ) => {
-  //         //   const uniqueSuffix =
-  //         //     Date.now() + '-' + Math.eround(Math.random() * 1e9);
-  //         //   const ext = extname(file.originalname as string);
-  //         req['uploadedFileName'] = file.originalname;
-  //         cb(null, `${file.originalname}`);
-  //       },
-  //     }),
-  //   }),
-  // )
+  @UseInterceptors(
+    FileInterceptor('file'),
+  )
   async uploadMovie(@Body() body: {
     name: string;
     description: string
-  }, @Req() req: Request): Promise<string> {
-    const movieName = req['uploadedFileName'];
-    const data = await this.movieServices.uploadMovie(
-      `/uploads/${movieName}`,
-      'video',
-    );
-    return data;
+  }, @Req() req: Request, @UploadedFile() file: Express.Multer.File): Promise<string> {
+    const uploadTicket = req.headers['x-upload-ticket']
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const extName = path.extname(file.originalname)
+    const movileName = uniqueSuffix.trimEnd() + extName 
+    await this.S3services.upLoadToS3(RAW_MOVIE_BUCKET, movileName, file.buffer);
+    await this.movieServices.uploadMovie(`${process.env.S3_SERVICE_ENDPOINT}/${RAW_MOVIE_BUCKET}/${movileName}`, 'video', uploadTicket)
+    return 'l'
   }
 
   @Post('upload/registerUploadTicket')

@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { RedisService } from 'src/Infrastructure/redis/redis.service';
 import { Movie } from '../movie.entity';
 import { ResponseType } from 'src/interface/response.interface';
 import { hashTheTicket } from '../movie.utils';
@@ -12,29 +11,50 @@ export class MovieServices {
   constructor(
     @InjectQueue('video-transform')
     private readonly videoEncodingQueue: Queue,
-    private readonly redisService: RedisService,
     private readonly movieRepository: MovieRepository
   ) { }
 
   async uploadMovie(
     inputFilePath: string,
     outputPath: string,
+    uploadTicket: string,
   ): Promise<string> {
-    console.log(inputFilePath, outputPath);
 
-    this.redisService.set('movie', 'processing', 3600);
+    const workCount = await this.videoEncodingQueue.getWaitingCount()
+    if (workCount > 5) {
+      return 'Too many movies being processed. Please try again later';
+    }
 
 
-    // const workCount = await this.videoEncodingQueue.getActiveCount();
-    // if (workCount > 5) {
-    //   return 'Too many movies being processed. Please try again later';
-    // }
+    const ticketData = await this.movieRepository.getTicketData(uploadTicket)
 
-    // void this.videoEncodingQueue.add('video-transcoding', {
-    //   videoPath: inputFilePath,
-    //   outputPath: outputPath,
-    // });
+    if (!ticketData) return 'error'
+
+    void this.videoEncodingQueue.add('video-transcoding', {
+      videoPath: inputFilePath,
+      outputPath: outputPath,
+      videoName: ticketData.name
+    });
     return 'Movie processing started';
+  }
+
+  async uploadTicketValidator(uploadTicket: string): Promise<{
+    isValid: boolean,
+    message?: string,
+    status?: HttpStatus,
+  }> {
+    const workCount = await this.videoEncodingQueue.getWaitingCount()
+    if (workCount > 5) {
+      return {
+        message: 'Too many movies being processed. Please try again later',
+        isValid: false,
+        status: HttpStatus.TOO_MANY_REQUESTS
+      }
+    }
+
+    const isValidTicket = await this.movieRepository.checkTicketIsValid(uploadTicket as string)
+    return isValidTicket
+
   }
 
   async registerMovieUploadTicket(
@@ -53,8 +73,10 @@ export class MovieServices {
       }
     }
 
+
+
     const hashTicket = hashTheTicket(name, description, releaseYear);
-    const writeTicketToRedis = await this.movieRepository.registerTicket(hashTicket);
+    const writeTicketToRedis = await this.movieRepository.registerTicket(hashTicket, name);
 
     if (!writeTicketToRedis.completed) {
       return {

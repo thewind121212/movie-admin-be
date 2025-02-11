@@ -15,7 +15,7 @@ export class DockerService {
 
 
 
-    async runFFmpegDocker(inputFilePath: string, outputPath: string): Promise<void> {
+    async runFFmpegDocker(inputFilePath: string, outputPath: string, videoName: string): Promise<void> {
         const imageName = 'linuxserver/ffmpeg';
         const filename = inputFilePath.replace('/uploads', '').split('.')[0];
         const segmentPattern = `/output/segment_%03d.ts`;
@@ -45,8 +45,7 @@ export class DockerService {
                 Cmd: cmd,
                 HostConfig: {
                     Binds: [
-                        `${path.resolve('./uploads')}:/uploads:rw`,
-                        `${path.resolve(`./processed/${filename}`)}:/output:rw`,
+                        `${path.resolve(`./processed/${videoName}`)}:/output:rw`,
                     ],
                 },
             });

@@ -15,21 +15,21 @@ export class VideoTranscodingProcessor {
 
   @Process('video-transcoding')
   async handleVideoTranscoding(
-    job: Job<{ videoPath: string; outputPath: string }>,
+    job: Job<{ videoPath: string; outputPath: string, videoName: string }>,
   ) {
-    console.log('Processing video job:', job.id);
 
-    const { videoPath, outputPath } = job.data;
+    const { videoPath, outputPath, videoName } = job.data;
+
+    console.log(videoName)
+
 
     console.log(`Transcoding video from ${videoPath} begins...`);
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    await this.dockerServices.runFFmpegDocker(videoPath, outputPath);
-    const filename = videoPath.replace('/uploads', '').split('.')[0];
+    await this.dockerServices.runFFmpegDocker(videoPath, outputPath, videoName);
     this.s3Service.uploadHLSToS3(
-      path.resolve(`./processed/${filename}`),
+      path.resolve(`./processed/${videoName}`),
       outputPath,
-      filename,
+      videoName,
     );
 
     return { success: true, message: 'Video transcoding completed!' };

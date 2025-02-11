@@ -6,14 +6,15 @@ import { ticketRegisterType } from "src/interface/movie.interface";
 export class MovieRepository {
     constructor(private readonly redisService: RedisService) { }
 
-    async registerTicket(hashTicketKey: string): Promise<{
+    async registerTicket(hashTicketKey: string, name: string): Promise<{
         completed: boolean
         message?: string
     }> {
         try {
             const registerTicket: ticketRegisterType = {
                 hashTicketKey,
-                status: 'REGISTER'
+                status: 'REGISTER',
+                name,
             }
             await this.redisService.set(hashTicketKey, JSON.stringify(registerTicket), 300);
             return {
@@ -28,16 +29,32 @@ export class MovieRepository {
         }
     }
 
-    async updateUploadTicket(hashTicketKey: string, status: 'REGISTER' | 'PROCESSING' | 'COMPLETED'): Promise<boolean> {
+    async updateUploadTicket(hashTicketKey: string, status: 'REGISTER' | 'PROCESSING' | 'COMPLETED', name: string): Promise<boolean> {
         try {
             const registerTicket: ticketRegisterType = {
                 hashTicketKey,
                 status: status,
+                name,
             }
             await this.redisService.set(hashTicketKey, JSON.stringify(registerTicket), 300)
             return true
         } catch (error) {
             return false
+        }
+    }
+
+
+    async getTicketData(hashTicketKey: string): Promise<ticketRegisterType | null> {
+        try {
+            console.log(hashTicketKey)
+            const redisRetrive = await this.redisService.get(hashTicketKey)
+
+            if (!redisRetrive) return null
+            const ticketData: ticketRegisterType = JSON.parse(redisRetrive)
+            return ticketData
+        } catch (error) {
+            console.log("Internal Error", error)
+            return null
         }
     }
 
@@ -54,7 +71,7 @@ export class MovieRepository {
                 message: "Ticket not found or Ticket expried!"
             }
         }
-        const { status }: ticketRegisterType = JSON.parse(redisRetrive)
+        const { status, name }: ticketRegisterType = JSON.parse(redisRetrive)
 
         if (status === 'PROCESSING') {
             return {
@@ -70,7 +87,7 @@ export class MovieRepository {
             }
         }
 
-        const uploadStatus = await this.updateUploadTicket(hashTicketKey, 'PROCESSING')
+        const uploadStatus = await this.updateUploadTicket(hashTicketKey, 'PROCESSING', name)
 
         if (!uploadStatus) {
             return {
