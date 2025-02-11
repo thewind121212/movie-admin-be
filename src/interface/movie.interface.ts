@@ -11,5 +11,6 @@ export interface movieRequestBody {
 
 export interface ticketRegisterType {
     hashTicketKey: string
-    status: 'REGISTER' | 'PROCESSING' | 'COMPLETED'
+    status: 'REGISTER' | 'PROCESSING' | 'COMPLETED',
+    name: string,
 }

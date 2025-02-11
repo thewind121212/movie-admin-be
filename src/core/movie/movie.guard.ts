@@ -1,18 +1,18 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
 import { HttpStatusCode } from 'axios';
 import { Request } from 'express';
-import { MovieRepository } from './movie.repositories';
+import { MovieServices } from './services/movie.service';
 
 @Injectable()
 export class MovieGuard implements CanActivate {
-    constructor(private readonly movieRepository: MovieRepository) {
+    constructor(private readonly movieServices: MovieServices) {
 
     }
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request: Request = context.switchToHttp().getRequest();
 
-        const uploadTiket = request.headers['x-upload-ticket']
-        if (!uploadTiket) {
+        const uploadTicket = request.headers['x-upload-ticket']
+        if (!uploadTicket) {
             throw new HttpException(
                 {
                     status: 'fail',
@@ -22,7 +22,8 @@ export class MovieGuard implements CanActivate {
                 HttpStatusCode.Forbidden
             )
         }
-        const isValidTicket = await this.movieRepository.checkTicketIsValid(uploadTiket as string)
+
+        const isValidTicket = await this.movieServices.uploadTicketValidator(uploadTicket as string)
 
         if (isValidTicket.isValid) {
             return true
