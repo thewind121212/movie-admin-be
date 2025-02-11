@@ -20,8 +20,6 @@ export class VideoTranscodingProcessor {
 
     const { videoPath, outputPath, videoName } = job.data;
 
-    console.log(videoName)
-
 
     console.log(`Transcoding video from ${videoPath} begins...`);
 

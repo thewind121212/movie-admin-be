@@ -1,5 +1,5 @@
 export interface ResponseType {
-    status: string;
+    status?: string;
     data: any;
     created_at?: Date;
     updated_at?: Date;

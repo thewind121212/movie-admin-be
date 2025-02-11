@@ -18,24 +18,36 @@ export class MovieServices {
     inputFilePath: string,
     outputPath: string,
     uploadTicket: string,
-  ): Promise<string> {
+  ): Promise<{
+    message: string,
+    status: HttpStatus
+  }> {
 
     const workCount = await this.videoEncodingQueue.getWaitingCount()
     if (workCount > 5) {
-      return 'Too many movies being processed. Please try again later';
+      return  {
+        message: 'Too many movies being processed. Please try again later',
+        status: HttpStatus.TOO_MANY_REQUESTS
+      }
     }
 
 
     const ticketData = await this.movieRepository.getTicketData(uploadTicket)
 
-    if (!ticketData) return 'error'
+    if (!ticketData) return {
+      message: 'Invalid upload ticket',
+      status: HttpStatus.BAD_REQUEST
+    }
 
     void this.videoEncodingQueue.add('video-transcoding', {
       videoPath: inputFilePath,
       outputPath: outputPath,
       videoName: ticketData.name
     });
-    return 'Movie processing started';
+    return {
+      message: 'Movie is being processed',
+      status: HttpStatus.CREATED
+    }
   }
 
   async uploadTicketValidator(uploadTicket: string): Promise<{
