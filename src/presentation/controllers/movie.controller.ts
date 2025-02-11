@@ -1,33 +1,36 @@
-import { Controller, UseInterceptors, Post, Body, Req } from '@nestjs/common';
+import { Controller, UseInterceptors, Post, Body, Req, UseGuards } from '@nestjs/common';
 import { ResponseType } from '../../interface/response.interface';
 import { MovieServices } from '../../core/movie/services/movie.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { MovieGuard } from 'src/core/movie/movie.guard';
 // import { extname } from 'path';
 
 @Controller('movie')
 export class MovieController {
   constructor(private readonly movieServices: MovieServices) { }
 
+
   @Post('upload/uploadMovie')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (
-          req: Express.Request,
-          file: Express.Multer.File,
-          cb: (error: Error | null, filename: string) => void,
-        ) => {
-          //   const uniqueSuffix =
-          //     Date.now() + '-' + Math.round(Math.random() * 1e9);
-          //   const ext = extname(file.originalname as string);
-          req['uploadedFileName'] = file.originalname;
-          cb(null, `${file.originalname}`);
-        },
-      }),
-    }),
-  )
+  @UseGuards(MovieGuard)
+  // @UseInterceptors(
+  //   FileInterceptor('file', {
+  //     storage: diskStorage({
+  //       destination: './uploads',
+  //       filename: (
+  //         req: Express.Request,
+  //         file: Express.Multer.File,
+  //         cb: (error: Error | null, filename: string) => void,
+  //       ) => {
+  //         //   const uniqueSuffix =
+  //         //     Date.now() + '-' + Math.eround(Math.random() * 1e9);
+  //         //   const ext = extname(file.originalname as string);
+  //         req['uploadedFileName'] = file.originalname;
+  //         cb(null, `${file.originalname}`);
+  //       },
+  //     }),
+  //   }),
+  // )
   async uploadMovie(@Body() body: {
     name: string;
     description: string

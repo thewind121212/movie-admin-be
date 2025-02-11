@@ -7,6 +7,7 @@ import { VideoTranscodingProcessor } from 'src/core/movie/transcodeVideo.worker'
 import { S3Module } from 'src/Infrastructure/s3/s3.module';
 import { RedisService } from 'src/Infrastructure/redis/redis.service';
 import { MovieRepository } from './movie.repositories';
+import { MovieGuard } from './movie.guard';
 @Module({
   imports: [
     DockerModule,
@@ -20,6 +21,6 @@ import { MovieRepository } from './movie.repositories';
     S3Module,
   ],
   controllers: [MovieController],
-  providers: [MovieServices, VideoTranscodingProcessor, RedisService, MovieRepository],
+  providers: [MovieServices, VideoTranscodingProcessor, RedisService, MovieRepository, MovieGuard],
 })
 export class MovieModule {}

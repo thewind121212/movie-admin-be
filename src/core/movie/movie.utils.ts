@@ -47,8 +47,8 @@ export const hashTheTicket = (
     description: string,
     releaseYear: number,
 ): string => {
-    console.log(name, description, releaseYear)
-    const hashData = bcrypt.hashSync(name + description + releaseYear, SALT_ROUND)
+    const timeStamp = new Date().getTime().toString()
+    const hashData = bcrypt.hashSync(name + description + releaseYear + timeStamp, SALT_ROUND)
     return hashData
 }
 

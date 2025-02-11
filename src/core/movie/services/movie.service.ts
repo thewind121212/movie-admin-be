@@ -54,9 +54,9 @@ export class MovieServices {
     }
 
     const hashTicket = hashTheTicket(name, description, releaseYear);
-    const ticket = await this.movieRepository.registerTicket(hashTicket);
+    const writeTicketToRedis = await this.movieRepository.registerTicket(hashTicket);
 
-    if (!ticket.completed) {
+    if (!writeTicketToRedis.completed) {
       return {
         message: 'Failed to register movie upload ticket',
         status: 'error',
@@ -68,7 +68,9 @@ export class MovieServices {
     return {
       message: 'Movie upload ticket registered',
       status: 'success',
-      data: null,
+      data: {
+        uploadTicket: hashTicket
+      },
       created_at: new Date()
     }
   }

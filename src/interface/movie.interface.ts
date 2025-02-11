@@ -1,4 +1,4 @@
-export interface movieRequestBody  {
+export interface movieRequestBody {
     title: string;
     description: string;
     year: number;
@@ -7,4 +7,9 @@ export interface movieRequestBody  {
     director: string;
     writer: string;
     producer: string;
+}
+
+export interface ticketRegisterType {
+    hashTicketKey: string
+    status: 'REGISTER' | 'PROCESSING' | 'COMPLETED'
 }
