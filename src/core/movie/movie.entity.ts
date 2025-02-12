@@ -1,5 +1,7 @@
 // Movie Entity
 
+import { movieEntityType } from "src/interface/movie.interface";
+
 export class Movie {
 
     public _id: string | null;
@@ -16,16 +18,23 @@ export class Movie {
     public _views: number;
     public _likes: number;
     public _dislikes: number;
-    public _status: ['UPLOADED', 'CONVERTING', 'COMPLETED'];
+    public _status: 'UPLOADED' | 'CONVERTING' | 'COMPLETED'
     public _isPublished: boolean;
 
 
-    constructor(id: string | null, name: string, description: string | null, createdAt: Date, updatedAt: Date, category: string[] | null) {
+    constructor(movieEntity: movieEntityType) {
+        const { id, name, description, createdAt, updatedAt, releaseYear, dislikes, likes, views, isPublished, status } = movieEntity;
         this._id = id;
         this._name = name;
         this._description = description;
+        this._releaseYear = releaseYear;
         this._createdAt = createdAt;
         this._updatedAt = updatedAt;
+        this._dislikes = dislikes
+        this._likes = likes;
+        this._views = views;
+        this._isPublished = isPublished;
+        this._status = status;
     }
 
 
@@ -105,7 +114,7 @@ export class Movie {
         this._dislikes = dislikes;
     }
 
-    setStatus(status: ['UPLOADED', 'CONVERTING', 'COMPLETED']) {
+    setStatus(status: 'UPLOADED' | 'CONVERTING' | 'COMPLETED') {
         this._status = status;
     }
 

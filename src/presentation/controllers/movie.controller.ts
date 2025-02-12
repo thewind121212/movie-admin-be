@@ -1,4 +1,4 @@
-import { Controller, UseInterceptors, Post, Body, Req, UseGuards, UploadedFile, Response } from '@nestjs/common';
+import { Controller, UseInterceptors, Post, Body, Req, UseGuards, UploadedFile, Response, Get } from '@nestjs/common';
 import { ResponseType } from '../../interface/response.interface';
 import { MovieServices } from '../../core/movie/services/movie.service';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -17,7 +17,7 @@ export class MovieController {
 
 
   @Post('upload/uploadMovie')
-  @UseGuards(MovieGuard)
+  // @UseGuards(MovieGuard)
   @UseInterceptors(
     FileInterceptor('file'),
   )
@@ -53,5 +53,11 @@ export class MovieController {
     );
 
     return result;
+  }
+
+  @Get('test') 
+
+  async testRoute() : Promise<string> {
+    return 'l'
   }
 }

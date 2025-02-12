@@ -6,7 +6,7 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class GenreRepository {
-    constructor(private prisma: PrismaService,) { }
+    constructor(private readonly prisma: PrismaService) { }
 
     //create category
     async createGenre(name: string, description: string): Promise<{

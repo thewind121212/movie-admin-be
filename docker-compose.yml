@@ -56,3 +56,11 @@ services:
       - '5432:5432'
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+
+  ffmpeg:
+    build:
+      context: .
+      dockerfile: ./ffmpeg.Dockerfile
+    container_name: ffmpeg-container
+    volumes:
+      - ./processed:/output  
