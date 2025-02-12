@@ -27,7 +27,7 @@ model MovieType {
   id        String   @id @default(cuid())  
   type      String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt  @default(now())
   movies    Movie[]  
 }
 
@@ -35,7 +35,7 @@ model Movie {
   id            String        @id @default(cuid())  
   name          String
   description   String
-  releaseYear   DateTime
+  releaseYear   Int
   duration      Int
   thumbnailUrl  String
   hlsFilePathS3 String

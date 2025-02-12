@@ -25,11 +25,12 @@ export class MovieServices {
 
     const workCount = await this.videoEncodingQueue.getWaitingCount()
     if (workCount > 5) {
-      return  {
+      return {
         message: 'Too many movies being processed. Please try again later',
         status: HttpStatus.TOO_MANY_REQUESTS
       }
     }
+
 
 
     const ticketData = await this.movieRepository.getTicketData(uploadTicket)
@@ -39,10 +40,38 @@ export class MovieServices {
       status: HttpStatus.BAD_REQUEST
     }
 
+
+    const resultWriteMovieRepository = await this.movieRepository.writeUploadMovieMetaData(ticketData, inputFilePath)
+
+    if (!('id' in resultWriteMovieRepository)) {
+      return {
+        message: 'Failed to upload movie',
+        status: HttpStatus.INTERNAL_SERVER_ERROR
+      }
+    }
+
+    const movieEntity = new Movie(
+      {
+        name: ticketData.name,
+        description: ticketData.desc,
+        releaseYear: ticketData.releaseYear,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        dislikes: resultWriteMovieRepository.dislikes,
+        likes: resultWriteMovieRepository.likes,
+        views: resultWriteMovieRepository.views,
+        isPublished: resultWriteMovieRepository.isPublished,
+        status: 'UPLOADED',
+        id: resultWriteMovieRepository.id
+      }
+    )
+
+
+
     void this.videoEncodingQueue.add('video-transcoding', {
       videoPath: inputFilePath,
       outputPath: outputPath,
-      videoName: ticketData.name
+      videoName: movieEntity._id,
     });
     return {
       message: 'Movie is being processed',
@@ -88,7 +117,7 @@ export class MovieServices {
 
 
     const hashTicket = hashTheTicket(name, description, releaseYear);
-    const writeTicketToRedis = await this.movieRepository.registerTicket(hashTicket, name);
+    const writeTicketToRedis = await this.movieRepository.registerTicket(hashTicket, name, description, releaseYear);
 
     if (!writeTicketToRedis.completed) {
       return {

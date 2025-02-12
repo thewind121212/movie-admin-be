@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Docker from 'dockerode';
+import { getVideoDurationFromLog } from './docker.utils';
 import path from 'path';
 
 
@@ -17,7 +18,6 @@ export class DockerService {
 
     async runFFmpegDocker(inputFilePath: string, outputPath: string, videoName: string): Promise<void> {
         const imageName = 'linuxserver/ffmpeg';
-        const filename = inputFilePath.replace('/uploads', '').split('.')[0];
         const segmentPattern = `/output/segment_%03d.ts`;
         const outputPlaylist = `/output/index.m3u8`;
 
@@ -27,13 +27,13 @@ export class DockerService {
             '-profile:v', 'high',
             '-level', '4.1',
             '-preset', 'medium',
-            '-b:v', '8000k',
+            '-b:v', '6000k',
             '-maxrate', '10M',
             '-bufsize', '20M',
             '-c:a', 'aac',
             '-b:a', '128k',
             '-start_number', '0',
-            '-hls_time', '6',
+            '-hls_time', '10',
             '-hls_list_size', '0',
             '-hls_playlist_type', 'vod',
             '-hls_segment_filename', segmentPattern,
@@ -60,5 +60,76 @@ export class DockerService {
             throw error; 
         }
     }
+
+
+    async calcDurationMovie(movieS3path: string): Promise<{
+        isError: boolean,
+        message?: string,
+        duration: number,
+    }> {
+
+        try {
+            const container = this.docker.getContainer('ffmpeg-container')
+
+            const cmd = [
+                'ffmpeg',
+                '-i', `${movieS3path}`,
+            ];
+
+
+            const exec = await container.exec({
+                Cmd: cmd,
+                AttachStderr: true,
+                AttachStdout: true,
+            })
+
+
+            const stream = await exec.start({ hijack: true, stdin: true });
+
+            let outputLog = ''
+
+            const returnData: {
+                isError: boolean,
+                message?: string,
+                duration: number,
+            } = {
+                isError: true,
+                duration: 0
+            }
+
+            await new Promise((resolve) => {
+                stream.on('data', (chunk) => {
+                    outputLog = outputLog + chunk.toString()
+                });
+
+                stream.on('end', () => {
+                    console.log('Exec command finished');
+                    returnData.duration = getVideoDurationFromLog(outputLog)
+                    returnData.isError = false
+                    resolve(returnData)
+                });
+
+                stream.on('error', (err) => {
+                    console.error('Error during exec command:', err);
+                    console.log(err)
+                    returnData.message = err.message
+                    resolve(returnData)
+                });
+            })
+
+
+            return returnData
+
+        } catch (error) {
+            return {
+                message: error,
+                isError: true,
+                duration: 0,
+            }
+        }
+
+
+    }
+
 }
 
