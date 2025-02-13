@@ -41,45 +41,6 @@ export class Movie {
     //validate
 
 
-    static validateRegisterUploadTicket(
-        name: string,
-        description: string,
-        genres: string[],
-        releaseYear: number
-    ) : {
-        isValid: boolean,
-        message: string,
-    } {
-        if (!name) {
-            return {
-                isValid: false,
-                message: 'Missing name movie'
-            }
-        }
-        if (!description) {
-            return {
-                isValid: false,
-                message: 'Missing description movie'
-            }
-        }
-        if (!genres) {
-            return {
-                isValid: false,
-                message: 'Missing genres movie'
-            }
-        }
-        if (!releaseYear) {
-            return {
-                isValid: false,
-                message: 'Missing release year movie'
-            }
-        }
-        return {
-            isValid: true,
-            message: 'Valid'
-        }
-    }
-
     //Setter or Mutator
 
     setCategory(genres: string[]) {

@@ -14,7 +14,7 @@ export class VideoTranscodingProcessor {
 
   @Process('video-transcoding')
   async handleVideoTranscoding(
-    job: Job<{ videoPath: string; outputPath: string, videoName: string }>,
+    job: Job<{ videoPath: string; outputPath: string, videoName: string, videoId : string }>,
   ) {
 
     const { videoPath, outputPath, videoName } = job.data;

@@ -1,17 +1,18 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
+import { Movie } from '../domain/movie.entity';
+import { MovieRepository } from '../repositories/movie.repositories';
+import { MovieDomainServices } from '../domain/movie.domainServices';
+import { registerMovieUploadTicketService } from './registerUploadMovie';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
-import { Movie } from '../movie.entity';
-import { ResponseType } from 'src/interface/response.interface';
-import { hashTheTicket } from '../movie.utils';
-import { MovieRepository } from '../movie.repositories';
 
 @Injectable()
 export class MovieServices {
   constructor(
     @InjectQueue('video-transform')
     private readonly videoEncodingQueue: Queue,
-    private readonly movieRepository: MovieRepository
+    private readonly movieRepository: MovieRepository,
+    private readonly movieDomainServices: MovieDomainServices
   ) { }
 
   async uploadMovie(
@@ -23,8 +24,8 @@ export class MovieServices {
     status: HttpStatus
   }> {
 
-    const workCount = await this.videoEncodingQueue.getWaitingCount()
-    if (workCount > 5) {
+    const isMaxQueue = await this.movieDomainServices.isMaxBullQueue()
+    if (isMaxQueue) {
       return {
         message: 'Too many movies being processed. Please try again later',
         status: HttpStatus.TOO_MANY_REQUESTS
@@ -84,8 +85,8 @@ export class MovieServices {
     message?: string,
     status?: HttpStatus,
   }> {
-    const workCount = await this.videoEncodingQueue.getWaitingCount()
-    if (workCount > 5) {
+    const isMaxQueue = await this.movieDomainServices.isMaxBullQueue()
+    if (isMaxQueue) {
       return {
         message: 'Too many movies being processed. Please try again later',
         isValid: false,
@@ -98,45 +99,6 @@ export class MovieServices {
 
   }
 
-  async registerMovieUploadTicket(
-    name: string,
-    description: string,
-    genres: string[],
-    releaseYear: number,
-  ): Promise<ResponseType> {
-    const isValidRegister = Movie.validateRegisterUploadTicket(name, description, genres, releaseYear)
-    if (!isValidRegister.isValid) {
-      return {
-        message: isValidRegister.message,
-        status: 'error',
-        data: null,
-        created_at: new Date()
-      }
-    }
 
-
-
-    const hashTicket = hashTheTicket(name, description, releaseYear);
-    const writeTicketToRedis = await this.movieRepository.registerTicket(hashTicket, name, description, releaseYear);
-
-    if (!writeTicketToRedis.completed) {
-      return {
-        message: 'Failed to register movie upload ticket',
-        status: 'error',
-        data: null,
-        created_at: new Date()
-      }
-    }
-
-    return {
-      message: 'Movie upload ticket registered',
-      status: 'success',
-      data: {
-        uploadTicket: hashTicket
-      },
-      created_at: new Date()
-    }
-  }
-
-
+  registerMovieUploadTicket = registerMovieUploadTicketService
 }
