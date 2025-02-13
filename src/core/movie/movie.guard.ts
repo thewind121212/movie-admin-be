@@ -1,15 +1,30 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
 import { HttpStatusCode } from 'axios';
 import { Request } from 'express';
-import { MovieServices } from './services/movie.service';
+import { MovieServices } from './Services/movie.service';
+import { MovieDomainServices } from './Domain/movie.domainServices';
 
 @Injectable()
 export class MovieGuard implements CanActivate {
-    constructor(private readonly movieServices: MovieServices) {
+    constructor(private readonly movieServices: MovieServices,
+        private readonly movieDomainServices: MovieDomainServices
+
+    ) {
 
     }
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request: Request = context.switchToHttp().getRequest();
+        const isMaxQueue = await this.movieDomainServices.isMaxBullQueue()
+        if (isMaxQueue) {
+            throw new HttpException(
+                {
+                    status: 'fail',
+                    data: null,
+                    message: 'Too many movies being processed. Please try again later'
+                },
+                HttpStatusCode.TooManyRequests
+            )
+        }
 
         const uploadTicket = request.headers['x-upload-ticket']
         if (!uploadTicket) {

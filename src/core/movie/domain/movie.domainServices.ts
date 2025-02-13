@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import crypto from 'bcrypt'
 import { TICKET_HASH_SALT_ROUND, VIDEO_PROCESSING_QUEUE_LIMIT } from "../movie.config";
-import { MovieRepository } from "../repositories/movie.repositories";
+import { MovieRepository } from "../Repositories/movie.repositories";
+import { ticketRegisterType } from "src/interface/movie.interface";
 
 
 @Injectable()
@@ -13,7 +14,7 @@ export class MovieDomainServices {
     ) { }
 
 
-    static validateRegisterUploadTicket(
+    static validateDataCreateTicket(
         name: string,
         description: string,
         genres: string[],
@@ -69,5 +70,41 @@ export class MovieDomainServices {
             return true
         }
         return false
+    }
+
+    async checkTicketIsValid(ticketData : ticketRegisterType, hashTicketKey: string): Promise<{
+        isValid: boolean,
+        message?: string,
+        status?: HttpStatus,
+    }> {
+
+        if (ticketData.status === 'PROCESSING') {
+            return {
+                isValid: false,
+                message: "This ticket had been processing!"
+            }
+        }
+
+        if (ticketData.status === 'COMPLETED') {
+            return {
+                isValid: false,
+                message: "This ticket is completed"
+            }
+        }
+
+        const uploadStatus = await this.movieRepository.updateTicket(hashTicketKey, 'PROCESSING', ticketData)
+
+        if (!uploadStatus) {
+            return {
+                isValid: false,
+                message: "Can not uploaded for this ticket",
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+
+        return {
+            isValid: true,
+            message: 'Movie uploadding please keep the broswer open when uploading'
+        }
     }
 }

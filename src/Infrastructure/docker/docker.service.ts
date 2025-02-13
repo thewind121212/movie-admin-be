@@ -49,7 +49,7 @@ export class DockerService {
         ];
 
 
-        let unitBatch: string[] = []
+        let batchPool: string[] = []
 
         try {
 
@@ -72,24 +72,24 @@ export class DockerService {
             });
             watcher.on('add', (path) => {
                 this.logger.log(`File ${path} has been added`);
-                if (unitBatch.length === BATCH_SIZE) {
-                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: unitBatch, videoName })
-                    unitBatch = []
+                if (batchPool.length === BATCH_SIZE) {
+                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName })
+                    batchPool = []
                 }
-                unitBatch.push(path)
+                batchPool.push(path)
             })
             await container.wait();
 
             await container.remove();
-            if (unitBatch.length > 0) {
-                chokidar.watch([...unitBatch], {
+            if (batchPool.length > 0) {
+                chokidar.watch([...batchPool], {
                     persistent: true,
                     awaitWriteFinish: {
                         stabilityThreshold: 2000,
                         pollInterval: 100
                     }
                 }).on('add', () => {
-                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: unitBatch, videoName })
+                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName })
                 })
 
             }

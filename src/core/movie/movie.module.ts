@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { MovieController } from '../../presentation/controllers/movie.controller';
-import { MovieServices } from './services/movie.service';
+import { MovieServices } from './Services/movie.service';
 import { DockerModule } from 'src/Infrastructure/docker/docker.module';
 import { BullModule } from '@nestjs/bull';
-import { VideoTranscodingProcessor } from 'src/core/movie/workerServices/transcodeVideo.worker';
+import { VideoTranscodingProcessor } from 'src/core/movie/WorkerServices/transcodeVideo.worker';
 import { S3Module } from 'src/Infrastructure/s3/s3.module';
 import { RedisService } from 'src/Infrastructure/redis/redis.service';
-import { MovieRepository } from './repositories/movie.repositories';
+import { MovieRepository } from './Repositories/movie.repositories';
 import { MovieGuard } from './movie.guard';
-import { MovieDomainServices } from './domain/movie.domainServices';
+import { MovieDomainServices } from './Domain/movie.domainServices';
 import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.service';
 @Module({
   imports: [
