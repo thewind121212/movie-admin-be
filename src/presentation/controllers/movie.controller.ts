@@ -8,6 +8,7 @@ import { RAW_MOVIE_BUCKET } from 'src/core/movie/movie.config';
 import { Response as ExpressResponse } from 'express';
 import path from 'path';
 import { DockerService } from 'src/Infrastructure/docker/docker.service';
+import fs from 'fs';
 
 
 @Controller('movie')
@@ -58,8 +59,8 @@ export class MovieController {
   }
 
   @Get('test') 
-
   async testRoute() : Promise<string> {
+    await fs.promises.rm(path.resolve(`processed/cm737dd4s0001syxek3g3zd7e`), { recursive: true , force: true });
     return 'l'
   }
 }

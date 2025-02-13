@@ -25,8 +25,7 @@ export class VideoTranscodingProcessor {
     console.log(`Transcoding video from ${videoPath} begins...`);
 
     await this.dockerServices.runFFmpegDocker(videoPath, outputPath, videoName);
-    this.s3Service.removePathFromS3('movie-raw', videoPath);
-    await fs.promises.rm(path.resolve(`/processed/${videoName}`), { recursive: true , force: true });
+    this.s3Service.removePathFromS3('movie-raw', videoPath.split('/').pop() as string);
     return { success: true, message: 'Video transcoding completed!' };
   }
 }

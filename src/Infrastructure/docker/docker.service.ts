@@ -6,8 +6,9 @@ import path from 'path';
 import chokidar from 'chokidar';
 import { BATCH_SIZE } from 'src/core/movie/movie.config';
 import { InjectQueue } from '@nestjs/bull';
-import { Queue } from 'bull';
-
+import { Job, Queue } from 'bull';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 
 
 @Injectable()
@@ -66,6 +67,7 @@ export class DockerService {
 
             await container.start();
 
+
             const watcher = chokidar.watch(`${path.resolve(`./processed/${videoName}`)}`, {
                 ignored: (file) => file.endsWith('.webp'),
                 persistent: true,
@@ -73,7 +75,9 @@ export class DockerService {
             watcher.on('add', (path) => {
                 this.logger.log(`File ${path} has been added`);
                 if (batchPool.length === BATCH_SIZE) {
-                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName })
+                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
+                        jobId: `${videoName}-${uuidv4()}`,
+                    })
                     batchPool = []
                 }
                 batchPool.push(path)
@@ -82,21 +86,32 @@ export class DockerService {
 
             await container.remove();
             if (batchPool.length > 0) {
-                chokidar.watch([...batchPool], {
-                    persistent: true,
-                    awaitWriteFinish: {
-                        stabilityThreshold: 2000,
-                        pollInterval: 100
-                    }
-                }).on('add', () => {
-                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName })
+                await new Promise(async (resolve) =>
+                    chokidar.watch([...batchPool], {
+                        persistent: true,
+                        awaitWriteFinish: {
+                            stabilityThreshold: 2000,
+                            pollInterval: 100
+                        }
+                    }).once('add', async () => {
+                        await this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
+                            jobId: `${videoName}-${uuidv4()}`,
+                        })
+                        return resolve(true)
+                    }))
+                await this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                    jobId: `${videoName}-${uuidv4()}`,
                 })
-
+            } else {
+                await this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                    jobId: `${videoName}-${uuidv4()}`,
+                })
             }
 
             watcher.close().then(() => {
                 this.logger.log(`Watcher folder ${path.resolve(`./processed/${videoName}`)} closed`);
             })
+
 
             this.logger.log(`FFmpeg completed successfully!`);
         } catch (error) {
