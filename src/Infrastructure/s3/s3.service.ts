@@ -14,6 +14,21 @@ export class S3Service {
     scanFolder(folderPath, this.s3Client, filename);
   }
 
+
+   removePathFromS3(bucketName: string, key: string) {
+    const params = {
+      Bucket: bucketName,
+      Key: key
+    }
+      this.s3Client.deleteObject(params, (err, data) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(data);
+      }
+    });
+  }
+
   async upLoadToS3(bucketName: string, key: string, fileBuffer: Buffer<ArrayBufferLike>) {
     const params = {
       Bucket: bucketName,

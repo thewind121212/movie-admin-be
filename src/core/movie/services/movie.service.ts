@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Movie } from '../domain/movie.entity';
-import { MovieRepository } from '../repositories/movie.repositories';
-import { MovieDomainServices } from '../domain/movie.domainServices';
+import { Movie } from '../Domain/movie.entity';
+import { MovieRepository } from '../Repositories/movie.repositories';
+import { MovieDomainServices } from '../Domain/movie.domainServices';
 import { registerMovieUploadTicketService } from './registerUploadMovie';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
@@ -23,16 +23,6 @@ export class MovieServices {
     message: string,
     status: HttpStatus
   }> {
-
-    const isMaxQueue = await this.movieDomainServices.isMaxBullQueue()
-    if (isMaxQueue) {
-      return {
-        message: 'Too many movies being processed. Please try again later',
-        status: HttpStatus.TOO_MANY_REQUESTS
-      }
-    }
-
-
 
     const ticketData = await this.movieRepository.getTicketData(uploadTicket)
 
@@ -94,7 +84,16 @@ export class MovieServices {
       }
     }
 
-    const isValidTicket = await this.movieRepository.checkTicketIsValid(uploadTicket as string)
+    const ticketData = await this.movieRepository.getTicketData(uploadTicket)
+    if (!ticketData) {
+      return {
+        isValid: false,
+        message: "Ticket not found or Ticket expried!"
+      }
+    }
+
+    const isValidTicket = await this.movieDomainServices.checkTicketIsValid(ticketData, uploadTicket)
+
     return isValidTicket
 
   }

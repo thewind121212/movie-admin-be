@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
+import {  Injectable } from "@nestjs/common";
 import { RedisService } from "src/Infrastructure/redis/redis.service";
 import { ticketRegisterType } from "src/interface/movie.interface";
 import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
@@ -47,7 +47,7 @@ export class MovieRepository {
         }
     }
 
-    async updateUploadTicket(hashTicketKey: string, status: 'REGISTER' | 'PROCESSING' | 'COMPLETED', ticketData: ticketRegisterType): Promise<boolean> {
+    async updateTicket(hashTicketKey: string, status: 'REGISTER' | 'PROCESSING' | 'COMPLETED', ticketData: ticketRegisterType): Promise<boolean> {
         try {
             const registerTicket: ticketRegisterType = {
                 ...ticketData,
@@ -75,51 +75,6 @@ export class MovieRepository {
         }
     }
 
-
-    async checkTicketIsValid(hashTicketKey: string): Promise<{
-        isValid: boolean,
-        message?: string,
-        status?: HttpStatus,
-    }> {
-        const redisRetrive = await this.redisService.get(hashTicketKey)
-        if (!redisRetrive) {
-            return {
-                isValid: false,
-                message: "Ticket not found or Ticket expried!"
-            }
-        }
-        const ticketData: ticketRegisterType = JSON.parse(redisRetrive)
-
-        if (ticketData.status === 'PROCESSING') {
-            return {
-                isValid: false,
-                message: "This ticket had been processing!"
-            }
-        }
-
-        if (ticketData.status === 'COMPLETED') {
-            return {
-                isValid: false,
-                message: "This ticket is completed"
-            }
-        }
-
-        const uploadStatus = await this.updateUploadTicket(hashTicketKey, 'PROCESSING', ticketData)
-
-        if (!uploadStatus) {
-            return {
-                isValid: false,
-                message: "Can not uploaded for this ticket",
-                status: HttpStatus.INTERNAL_SERVER_ERROR
-            }
-        }
-
-        return {
-            isValid: true,
-            message: 'Movie uploadding please keep the broswer open when uploading'
-        }
-    }
-    async 
 
     async writeUploadMovieMetaData(ticketData: ticketRegisterType,
         moviePath: string,

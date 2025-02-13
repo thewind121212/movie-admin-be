@@ -1,5 +1,5 @@
 import { ResponseType } from "src/interface/response.interface";
-import { MovieDomainServices } from "../domain/movie.domainServices";
+import { MovieDomainServices } from "../Domain/movie.domainServices";
 
 export  async function registerMovieUploadTicketService(
     name: string,
@@ -9,7 +9,7 @@ export  async function registerMovieUploadTicketService(
   ): Promise<ResponseType> {
 
     // call from domain services
-    const isValidRegister = MovieDomainServices.validateRegisterUploadTicket(name, description, genres, releaseYear)
+    const isValidRegister = MovieDomainServices.validateDataCreateTicket(name, description, genres, releaseYear)
     if (!isValidRegister.isValid) {
       return {
         message: isValidRegister.message,
