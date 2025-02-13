@@ -10,7 +10,7 @@ export class S3Service {
     this.s3 = s3Client;
   }
 
-  uploadHLSToS3(folderPath: string, S3Path: string, filename: string) {
+  uploadHLSBunchTsFilesToS3(folderPath: string, S3Path: string, filename: string) {
     scanFolder(folderPath, this.s3Client, filename);
   }
 

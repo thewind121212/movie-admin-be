@@ -7,12 +7,14 @@ import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import { RAW_MOVIE_BUCKET } from 'src/core/movie/movie.config';
 import { Response as ExpressResponse } from 'express';
 import path from 'path';
+import { DockerService } from 'src/Infrastructure/docker/docker.service';
 
 
 @Controller('movie')
 export class MovieController {
   constructor(private readonly movieServices: MovieServices,
     public readonly S3services: S3Service,
+    private readonly docker: DockerService
   ) { }
 
 
