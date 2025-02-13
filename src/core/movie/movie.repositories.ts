@@ -110,7 +110,7 @@ export class MovieRepository {
             message: 'Movie uploadding please keep the broswer open when uploading'
         }
     }
-
+    async 
 
     async writeUploadMovieMetaData(ticketData: ticketRegisterType,
         moviePath: string,

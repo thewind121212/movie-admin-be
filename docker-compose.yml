@@ -63,4 +63,4 @@ services:
       dockerfile: ./ffmpeg.Dockerfile
     container_name: ffmpeg-container
     volumes:
-      - ./processed:/output  
+      - ./processed:/output:rw  
