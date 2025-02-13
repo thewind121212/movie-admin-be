@@ -4,7 +4,6 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcrypt'
 
-const SALT_ROUND = 5
 
 
 export const uploadFile = async (filePath: string, s3: AWS.S3, bucketName: string, key: string) => {
@@ -42,15 +41,6 @@ export const scanFolder = async (folderPath: string, s3: AWS.S3, filename: strin
     console.log('All files uploaded.');
 }
 
-export const hashTheTicket = (
-    name: string,
-    description: string,
-    releaseYear: number,
-): string => {
-    const timeStamp = new Date().getTime().toString()
-    const hashData = bcrypt.hashSync(name + description + releaseYear + timeStamp, SALT_ROUND)
-    return hashData
-}
 
 export const compareTicket = (hashTicket: string, plainTicket: string): boolean => {
     const result = bcrypt.compareSync(plainTicket, hashTicket)

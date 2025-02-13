@@ -4,13 +4,23 @@ import { ticketRegisterType } from "src/interface/movie.interface";
 import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
 import { Movie } from "@prisma/client";
 import { DockerService } from 'src/Infrastructure/docker/docker.service';
+import { InjectQueue } from "@nestjs/bull";
+import { Queue } from "bull";
 
 @Injectable()
 export class MovieRepository {
     constructor(private readonly redisService: RedisService,
+        @InjectQueue('video-transform')
+        private readonly videoEncodingQueue: Queue,
         private readonly prisma: PrismaService,
         private readonly docker: DockerService
     ) { }
+
+
+    async getWaitingCount(): Promise<number> {
+        const workCount = await this.videoEncodingQueue.getWaitingCount()
+        return workCount
+    }
 
     async registerTicket(hashTicketKey: string, name: string, desc: string, releaseYear: number): Promise<{
         completed: boolean
@@ -54,7 +64,6 @@ export class MovieRepository {
 
     async getTicketData(hashTicketKey: string): Promise<ticketRegisterType | null> {
         try {
-            console.log(hashTicketKey)
             const redisRetrive = await this.redisService.get(hashTicketKey)
 
             if (!redisRetrive) return null

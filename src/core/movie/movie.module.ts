@@ -6,8 +6,9 @@ import { BullModule } from '@nestjs/bull';
 import { VideoTranscodingProcessor } from 'src/core/movie/workerServices/transcodeVideo.worker';
 import { S3Module } from 'src/Infrastructure/s3/s3.module';
 import { RedisService } from 'src/Infrastructure/redis/redis.service';
-import { MovieRepository } from './movie.repositories';
+import { MovieRepository } from './repositories/movie.repositories';
 import { MovieGuard } from './movie.guard';
+import { MovieDomainServices } from './domain/movie.domainServices';
 import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.service';
 @Module({
   imports: [
@@ -23,6 +24,6 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
     S3Module,
   ],
   controllers: [MovieController],
-  providers: [MovieServices, VideoTranscodingProcessor, RedisService, MovieRepository, MovieGuard, PrismaService],
+  providers: [MovieServices, VideoTranscodingProcessor, RedisService, MovieRepository, MovieGuard, PrismaService, MovieDomainServices],
 })
 export class MovieModule { }
