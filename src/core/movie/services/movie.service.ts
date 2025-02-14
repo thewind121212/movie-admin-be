@@ -32,6 +32,7 @@ export class MovieServices {
     }
 
 
+
     const resultWriteMovieRepository = await this.movieRepository.writeUploadMovieMetaData(ticketData, inputFilePath)
 
     if (!('id' in resultWriteMovieRepository)) {
@@ -56,7 +57,6 @@ export class MovieServices {
         id: resultWriteMovieRepository.id
       }
     )
-
 
 
     void this.videoEncodingQueue.add('video-transcoding', {
