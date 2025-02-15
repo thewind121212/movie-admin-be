@@ -70,7 +70,6 @@ export class DockerService {
 
             const watcher = chokidar.watch(`${path.resolve(`./processed/${videoName}`)}`, {
                 ignored: (file) => file.endsWith('.webp'),
-                persistent: true,
             });
             watcher.on('add', (path) => {
                 this.logger.log(`File ${path} has been added`);
@@ -99,11 +98,11 @@ export class DockerService {
                         })
                         return resolve(true)
                     }))
-                await this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
                     jobId: `${videoName}-${uuidv4()}`,
                 })
             } else {
-                await this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
                     jobId: `${videoName}-${uuidv4()}`,
                 })
             }

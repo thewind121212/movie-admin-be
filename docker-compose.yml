@@ -13,6 +13,8 @@ services:
     ports:
       - '9000:9000'
       - '9001:9001'
+    networks:
+      - movie-network-service
 
   awslocal:
     image: amazon/aws-cli
@@ -39,6 +41,8 @@ services:
       - AWS_SECRET_ACCESS_KEY=test-key
     depends_on:
       - minio
+    networks:
+      - movie-network-service
 
   movie-redis:
     image: redis
@@ -56,6 +60,8 @@ services:
       - '5432:5432'
     volumes:
       - ./postgres_data:/var/lib/postgresql/data
+    networks:
+      - movie-network-service
 
   ffmpeg:
     build:
@@ -63,4 +69,10 @@ services:
       dockerfile: ./ffmpeg.Dockerfile
     container_name: ffmpeg-container
     volumes:
-      - ./processed:/output:rw  
+      - ./processed:/output:rw
+    networks:
+      - movie-network-service
+
+networks:
+  movie-network-service:
+    driver: bridge

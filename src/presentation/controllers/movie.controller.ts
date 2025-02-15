@@ -1,6 +1,6 @@
 import { Controller, UseInterceptors, Post, Body, Req, UseGuards, UploadedFile, Response, Get } from '@nestjs/common';
 import { ResponseType } from '../../interface/response.interface';
-import { MovieServices } from '../../core/movie/Services/movie.service';
+import { MovieServices } from '../../core/movie/services/movie.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { MovieGuard } from 'src/core/movie/movie.guard';
 import { S3Service } from 'src/Infrastructure/s3/s3.service';

@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { Movie } from '../Domain/movie.entity';
-import { MovieRepository } from '../Repositories/movie.repositories';
-import { MovieDomainServices } from '../Domain/movie.domainServices';
+import { Movie } from '../domain/movie.entity';
+import { MovieRepository } from '../repositories/movie.repositories';
+import { MovieDomainServices } from '../domain/movie.domainServices';
 import { registerMovieUploadTicketService } from './registerUploadMovie';
 import { Queue } from 'bull';
 import { InjectQueue } from '@nestjs/bull';
