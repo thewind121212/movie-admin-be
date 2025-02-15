@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable } from "@nestjs/common";
 import crypto from 'bcrypt'
 import { TICKET_HASH_SALT_ROUND, VIDEO_PROCESSING_QUEUE_LIMIT } from "../movie.config";
-import { MovieRepository } from "../Repositories/movie.repositories";
+import { MovieRepository } from "../repositories/movie.repositories";
 import { ticketRegisterType } from "src/interface/movie.interface";
 
 

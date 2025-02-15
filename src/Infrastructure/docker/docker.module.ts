@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { DockerService } from './docker.service';
-import { tsChunkProcesser } from 'src/core/movie/WorkerServices/postProcessTsChunk.worker';
+import { tsChunkProcesser } from 'src/core/movie/workerServices/postProcessTsChunk.worker';
 import Docker from 'dockerode';
 import { BullModule } from '@nestjs/bull';
 import { S3Service } from '../s3/s3.service';

@@ -8,7 +8,14 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['eslint.config.mjs', 'uploads/', '/processed', '/postgres_data', '/minio-data'],
+    ignores: [
+      'eslint.config.mjs',
+      'uploads/',
+      '/processed',
+      '/postgres_data',
+      '/minio-data',
+      '/processed-client',
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,

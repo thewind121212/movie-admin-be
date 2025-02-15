@@ -1,8 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
 import { HttpStatusCode } from 'axios';
 import { Request } from 'express';
-import { MovieServices } from './Services/movie.service';
-import { MovieDomainServices } from './Domain/movie.domainServices';
+import { MovieServices } from './services/movie.service';
+import { MovieDomainServices } from './domain/movie.domainServices';
 
 @Injectable()
 export class MovieGuard implements CanActivate {

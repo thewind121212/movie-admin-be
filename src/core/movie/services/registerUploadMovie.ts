@@ -1,5 +1,5 @@
 import { ResponseType } from "src/interface/response.interface";
-import { MovieDomainServices } from "../Domain/movie.domainServices";
+import { MovieDomainServices } from "../domain/movie.domainServices";
 
 export  async function registerMovieUploadTicketService(
     name: string,
