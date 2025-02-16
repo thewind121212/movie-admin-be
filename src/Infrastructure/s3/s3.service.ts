@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
+import { ReadStream } from 'fs';
 import { scanFolder } from 'src/core/movie/movie.utils';
 
 @Injectable()
@@ -29,11 +30,11 @@ export class S3Service {
     });
   }
 
-  async upLoadToS3(bucketName: string, key: string, fileBuffer: Buffer<ArrayBufferLike>) {
+  async upLoadToS3(bucketName: string, key: string, fileStream: ReadStream) {
     const params = {
       Bucket: bucketName,
       Key: String(key),
-      Body: fileBuffer,
+      Body: fileStream,
       ACL: 'public-read',
     }
     try {
