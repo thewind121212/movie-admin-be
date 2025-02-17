@@ -7,7 +7,7 @@ import { VideoTranscodingProcessor } from 'src/core/movie/workerServices/transco
 import { S3Module } from 'src/Infrastructure/s3/s3.module';
 import { RedisService } from 'src/Infrastructure/redis/redis.service';
 import { MovieRepository } from './repositories/movie.repositories';
-import { MovieGuard } from './movie.guard';
+import { MovieGuard } from './guards/uploadMovie.guard';
 import { MovieDomainServices } from './domain/movie.domainServices';
 import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.service';
 @Module({

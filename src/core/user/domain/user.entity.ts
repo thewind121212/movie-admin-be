@@ -3,7 +3,7 @@ export class User {
     public email: string;
     public password: string;
 
-    constructor(id, email, password) {
+    constructor(id : string | null, email : string, password : string) {
         this._id = id;
         this.email = email;
         this.password = password;
