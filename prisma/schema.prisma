@@ -51,6 +51,22 @@ model Movie {
   updatedAt     DateTime      @updatedAt
 }
 
+model User {
+  id        String   @id @default(cuid())  
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model RegistrationRequests {
+  id        String   @id @default(cuid())  
+  email     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
 
 enum MovieStatus {
   UPLOADED  

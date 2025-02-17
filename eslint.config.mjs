@@ -15,6 +15,7 @@ export default tseslint.config(
       '/postgres_data',
       '/minio-data',
       '/processed-client',
+      '/data-mailpit'
     ],
   },
   eslint.configs.recommended,

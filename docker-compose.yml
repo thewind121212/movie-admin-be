@@ -30,11 +30,11 @@ services:
         echo 'MinIO is healthy.' &&
         echo 'Listing S3 buckets...' &&
         if aws --endpoint-url=http://minio:9000 s3 ls | grep -q 'movie-bucket'; then
-        echo 'Bucket \"movie-bucket\" already exists.';
+        echo 'Bucket "movie-bucket" already exists.';
         else
-        echo 'Bucket \"movie-bucket\" does not exist. Creating it...';
+        echo 'Bucket "movie-bucket" does not exist. Creating it...';
         aws --endpoint-url=http://minio:9000 s3 mb s3://movie-bucket &&
-        echo 'Bucket \"movie-bucket\" created successfully.';
+        echo 'Bucket "movie-bucket" created successfully.';
         fi
     environment:
       - AWS_ACCESS_KEY_ID=test-id
@@ -72,6 +72,35 @@ services:
       - ./processed:/output:rw
     networks:
       - movie-network-service
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin4_container
+    ports:
+      - '5050:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: root
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    depends_on:
+      - postgres
+    networks:
+      - movie-network-service
+
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    volumes:
+      - ./data-mailpit:/data
+    ports:
+      - 8025:8025
+      - 1025:1025
+    environment:
+      MP_MAX_MESSAGES: 5000
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+      MP_UI_AUTH: admin:linhporo1
 
 networks:
   movie-network-service:

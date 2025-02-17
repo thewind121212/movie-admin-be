@@ -3,10 +3,11 @@ import { AppService } from '../../app.service';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) { }
 
   @Get()
-  ping(): string {
+  async ping() {
+    await this.appService.sendEmail();
     return this.appService.ping();
   }
 }
