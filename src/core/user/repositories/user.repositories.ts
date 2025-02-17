@@ -1,17 +1,17 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { PrismaService } from "../../../Infrastructure/prisma-client/prisma-client.service";
+import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
 import { RegistrationRequests } from '@prisma/client'
 
 
 @Injectable()
+export class UserRepositories {
+    private readonly logger = new Logger(UserRepositories.name)
 
-class UserRepositories {
     constructor(
         private readonly prisma: PrismaService,
-        private readonly logger: Logger
     ) { }
 
-    //create register request
+    // create register request
     async createRegisterRequest(data: { email: string }): Promise<RegistrationRequests | null> {
         try {
             const registerRequest = await this.prisma.registrationRequests.create({

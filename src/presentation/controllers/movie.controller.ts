@@ -1,7 +1,7 @@
 import { Controller, Post, Body, Req, UseGuards, Response, Get } from '@nestjs/common';
 import { ResponseType } from '../../interface/response.interface';
 import { MovieServices } from '../../core/movie/services/movie.service';
-import { MovieGuard } from 'src/core/movie/movie.guard';
+import { MovieGuard } from 'src/core/movie/guards/uploadMovie.guard';
 import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import { RAW_MOVIE_BUCKET } from 'src/core/movie/movie.config';
 import { Response as ExpressResponse, Request as ExpressRequest } from 'express';
