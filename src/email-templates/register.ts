@@ -175,7 +175,7 @@ export const registerEmailTemplate = (header: string, body: string) => {
                                 font-family: 'Helvetica Neue', 'Lexend Deca',
                                   Arial, Helvetica, sans-serif;
                                 font-size: 16px;
-                                max-width: 60%;
+                                max-width: 70%;
                                 text-align: center;
                                 line-height: 24px;
                                 color: rgb(66, 91, 118);
@@ -183,7 +183,7 @@ export const registerEmailTemplate = (header: string, body: string) => {
                               "
                                             data-darkreader-inline-color=""
                                     >
-                                        <p style="text-align: center; margin: 0 ;max-width: 60%; text-align: center; margin: auto;
+                                        <p style="text-align: center; margin: 0 ;max-width: 70%; text-align: center; margin: auto;
                                         ">
                                         ${body}
                                         </p>
