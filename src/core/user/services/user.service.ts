@@ -14,12 +14,6 @@ export class UserService {
         status: HttpStatus
     }> {
         const registerRequestResult = await this.userDomainServices.registerRequest(email);
-        if (registerRequestResult.isError) {
-            return {
-                message: registerRequestResult.message,
-                status: HttpStatus.BAD_REQUEST
-            }
-        }
 
         if (registerRequestResult.isInternalError) {
             return {
@@ -27,11 +21,60 @@ export class UserService {
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
         }
+
+
+        if (registerRequestResult.isError) {
+            return {
+                message: registerRequestResult.message,
+                status: HttpStatus.BAD_REQUEST
+            }
+        }
+
         await this.mailService.nodemailer.sendMail(registerRequestResult.mailOptions!);
 
         return {
             message: 'Email registered successfully',
             status: HttpStatus.CREATED
+        }
+    }
+
+
+    async approveRegisterRequest(email: string): Promise<{
+        message: string,
+        status: HttpStatus
+    }> {
+
+        try {
+            const approveRegsiterRequestResult = await this.userDomainServices.approveRegisterRequest(email)
+
+            if (approveRegsiterRequestResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (approveRegsiterRequestResult.isError) {
+                return {
+                    message: approveRegsiterRequestResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+
+            await this.mailService.nodemailer.sendMail(approveRegsiterRequestResult.mailOptions!);
+
+            return {
+                message: 'Email approved successfully',
+                status: HttpStatus.OK
+            }
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+
         }
     }
 

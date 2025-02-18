@@ -26,5 +26,22 @@ export class UserRepositories {
         }
     }
 
+    // find register request
+    async findRegisterRequest(email: string): Promise<RegistrationRequests | null> {
+        try {
+            const registerRequest = await this.prisma.registrationRequests.findUnique({
+                where: {
+                    email
+                }
+            })
+            return registerRequest
+        } catch (error) {
+            
+            this.logger.error(error)
+            return null
+        }
+    }
+    
+
 
 }

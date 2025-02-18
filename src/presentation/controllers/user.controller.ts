@@ -2,8 +2,10 @@
 import { Controller, Body, Get, Post, Response, HttpStatus, UseGuards } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
 import { RegisterRequestGuard } from 'src/core/user/guards/registerRequest.guard';
+import { ApproveRegisterRequestGuard } from 'src/core/user/guards/approveRegisterRequest.guard';
+import { ValidateTokenRegisterRequestGuard } from 'src/core/user/guards/validateJWTRegisterRequest.guard';
 import { UserService } from 'src/core/user/services/user.service';
-// import { extname } from 'path';
+import { ResponseType } from 'src/interface/response.interface';
 
 @Controller('user')
 export class UserController {
@@ -13,13 +15,52 @@ export class UserController {
   ) {
   }
 
-  @Post('auth/registerRequest')
+  @Post('auth/registerRequest/create')
   @UseGuards(RegisterRequestGuard)
   async registerRequest(
     @Body('email') email: string,
     @Response() res: ExpressResponse
-  ) {
+  ): Promise<ExpressResponse> {
     const { status, message } = await this.userService.registerRequest(email);
-    return res.status(status).json({ message });
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
+  }
+
+
+  @Post('auth/registerRequest/vaildate')
+  @UseGuards(ValidateTokenRegisterRequestGuard)
+  async validateRegisterRequest(
+    @Body('email') email: string,
+    @Response() res: ExpressResponse
+  ) {
+    const response: ResponseType = {
+      message: 'Register request is valid',
+      data: {
+        email,
+      },
+      created_at: new Date()
+    }
+
+    return res.status(HttpStatus.OK).json({ ...response });
+  }
+
+
+  @Post('auth/registerRequest/approve')
+  @UseGuards(ApproveRegisterRequestGuard)
+  async approveRegisterRequest(
+    @Body('email') email: string,
+    @Response() res: ExpressResponse
+  ) {
+    const { status, message } = await this.userService.approveRegisterRequest(email);
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
   }
 }
