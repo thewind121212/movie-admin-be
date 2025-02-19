@@ -94,11 +94,10 @@ export class UserDomainServices {
                 Your email has been approved. Please click the link below to complete your registration. This link will expire in 15 minutes. 
                 If you did not request this, please ignore this email.
                 <br/>
-                <a href="{{.AlternativeLink}}"
+                <a href="${process.env.FRONTEND_URL}/register?p=${signToken}"
                 style="color: rgb(0, 141, 163); --darkreader-inline-color: #5ae9ff; margin-top: 10px;"
                 target="_blank"
-                data-saferedirecturl=""
-                data-darkreader-inline-color="${process.env.FRONTEND_URL}?p=${signToken}">Register Link!
+                data-saferedirecturl="">Register Link!
                </a> 
             `
             )

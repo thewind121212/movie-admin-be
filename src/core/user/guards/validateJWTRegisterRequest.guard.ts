@@ -35,7 +35,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
                 {
                     status: 'Forbidden',
                     data: null,
-                    message,
+                    message: 'Invalid token please try again'
                 },
                 HttpStatusCode.Forbidden
             )
