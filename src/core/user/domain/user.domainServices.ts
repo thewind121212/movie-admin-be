@@ -3,7 +3,9 @@ import { UserRepositories } from "../repositories/user.repositories";
 import { registerEmailTemplate } from "src/email-templates/register";
 import { MailOptions } from "nodemailer/lib/smtp-transport";
 import { UserSecurity } from "../security/user.security";
-import { CodeStarNotifications } from "aws-sdk";
+import { REGISTER_REQUEST_RETRY_DAY } from "../user.config";
+import { DateTime } from 'luxon';
+
 
 
 @Injectable()
@@ -23,7 +25,23 @@ export class UserDomainServices {
 
 
         try {
-            this.userRepositories.createRegisterRequest({ email })
+            const registerRequest = await this.userRepositories.findRegisterRequest(email)
+            if (!registerRequest) {
+                await this.userRepositories.createRegisterRequest({ email })
+            } else {
+                const now = DateTime.now()
+                const lastRequest = DateTime.fromJSDate(registerRequest.updatedAt)
+                const dayDiff = now.diff(lastRequest, 'days').days
+
+                if (dayDiff < REGISTER_REQUEST_RETRY_DAY) {
+                    return {
+                        isError: true,
+                        message: `Your request being processed. Please wait for ${(REGISTER_REQUEST_RETRY_DAY - dayDiff).toFixed()} days before requesting again`
+                    }
+                } else {
+                    await this.userRepositories.findAndUpdateRegisterRequest(email)
+                }
+            }
 
 
             const emailContent = registerEmailTemplate(
