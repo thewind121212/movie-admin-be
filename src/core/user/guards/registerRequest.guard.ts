@@ -1,4 +1,3 @@
-
 import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
 import { RegisterRequest } from '../domain/user.entity';
 import { HttpStatusCode } from 'axios';

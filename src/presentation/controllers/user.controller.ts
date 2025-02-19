@@ -6,6 +6,7 @@ import { ApproveRegisterRequestGuard } from 'src/core/user/guards/approveRegiste
 import { ValidateTokenRegisterRequestGuard } from 'src/core/user/guards/validateJWTRegisterRequest.guard';
 import { UserService } from 'src/core/user/services/user.service';
 import { ResponseType } from 'src/interface/response.interface';
+import { Register } from 'src/core/user/guards/register.guard';
 
 @Controller('user')
 export class UserController {
@@ -56,6 +57,23 @@ export class UserController {
     @Response() res: ExpressResponse
   ) {
     const { status, message } = await this.userService.approveRegisterRequest(email);
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
+  }
+
+
+  @Post('auth/register')
+  @UseGuards(Register)
+  async register(
+    @Body() body: { email: string, password: string, token: string, name: string },
+    @Response() res: ExpressResponse
+  ) {
+    const {email, password, token, name} = body;
+    const { status, message } = await this.userService.register({ email, password, token, name });
     const response: ResponseType = {
       message,
       data: null,

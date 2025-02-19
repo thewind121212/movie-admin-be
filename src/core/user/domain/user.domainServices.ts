@@ -5,6 +5,7 @@ import { MailOptions } from "nodemailer/lib/smtp-transport";
 import { UserSecurity } from "../security/user.security";
 import { REGISTER_REQUEST_RETRY_DAY } from "../user.config";
 import { DateTime } from 'luxon';
+import  crypto from 'bcrypt'
 
 
 
@@ -25,7 +26,19 @@ export class UserDomainServices {
 
 
         try {
-            const registerRequest = await this.userRepositories.findRegisterRequest(email)
+            const [registerRequest, user] = await Promise.all([
+                this.userRepositories.findRegisterRequest(email),
+                this.userRepositories.findUser(email)
+            ])
+
+            if (user) {
+                return {
+                    isError: true,
+                    message: 'User already exist'
+                }
+            }
+
+
             if (!registerRequest) {
                 await this.userRepositories.createRegisterRequest({ email })
             } else {
@@ -82,7 +95,7 @@ export class UserDomainServices {
         try {
             const signToken = this.userSecurityServices.signJWT({
                 email
-            }, '15m', 'register-request-approval')
+            }, '3d', 'register-request-approval')
 
             if (!signToken) {
                 throw new Error('Error signing token')
@@ -91,7 +104,7 @@ export class UserDomainServices {
             const emailContent = registerEmailTemplate(
                 'Thank you for patience!',
                 ` 
-                Your email has been approved. Please click the link below to complete your registration. This link will expire in 15 minutes. 
+                Your email has been approved. Please click the link below to complete your registration. This link will expire in 3 days. 
                 If you did not request this, please ignore this email.
                 <br/>
                 <a href="${process.env.FRONTEND_URL}/register?p=${signToken}"
@@ -122,6 +135,57 @@ export class UserDomainServices {
                 isInternalError: true,
                 message: 'Error approving register request'
             }
+        }
+    }
+
+    async register(data: { email: string, password: string, token: string, name: string }): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        message: string
+        mailOptions?: MailOptions
+    }> {
+        try {
+            const hashedPassword = await crypto.hash(data.password, 10)
+            await this.userRepositories.createUser({
+                email: data.email,
+                password: hashedPassword,
+                name: data.name
+                
+            })
+
+            const emailContent = registerEmailTemplate(
+                'Welcome to our platform!',
+                "You have successfully registered with us. You can now login to your account."
+            )
+
+
+            const mailOptions = {
+                from: 'admin@wliafdew.dev',
+                to: data.email,
+                subject: 'Register request',
+                html: emailContent,
+            }
+
+
+            return {
+                isError: false,
+                message: 'User created successfully',
+                mailOptions
+            }
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error create user'
+            }
+
+        }
+
+        return {
+            isError: true,
+            isInternalError: true,
+            message: 'Error approving register request'
         }
     }
 
