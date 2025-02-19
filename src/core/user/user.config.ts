@@ -1,1 +1,2 @@
 export const REGISTER_REQUEST_RETRY_DAY = 3;
+export const USER_PASSWORD_SALT_ROUND = 10;

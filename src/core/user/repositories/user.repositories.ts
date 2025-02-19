@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
-import { RegistrationRequests } from '@prisma/client';
+import { RegistrationRequests, User } from '@prisma/client';
 
 
 @Injectable()
@@ -46,7 +46,6 @@ export class UserRepositories {
     }
 
     // find and up request
-
     async findAndUpdateRegisterRequest(email: string): Promise<RegistrationRequests | null> {
         try {
             const registerRequest = await this.prisma.registrationRequests.update({
@@ -65,5 +64,35 @@ export class UserRepositories {
 
     }
 
+    //find user in user db 
+    async findUser(email: string): Promise<User | null> {
+        try {
+            const user = await this.prisma.user.findUnique({
+                where: {
+                    email
+                }
+            })
+            return user
+        } catch (error) {
+            this.logger.error(error)
+            return null
+        }
+    }
 
+    // create user
+    async createUser(data: { email: string, password: string, name: string }): Promise<User | null> {
+        try {
+            const user = await this.prisma.user.create({
+                data: {
+                    email: data.email,
+                    password: data.password,
+                    name: data.name
+                }
+            })
+            return user
+        } catch (error) {
+            this.logger.error(error)
+            return null
+        }
+    }
 }

@@ -30,7 +30,7 @@ export class UserService {
             }
         }
 
-        await this.mailService.nodemailer.sendMail(registerRequestResult.mailOptions!);
+        this.mailService.nodemailer.sendMail(registerRequestResult.mailOptions!);
 
         return {
             message: 'Email registered successfully',
@@ -62,7 +62,7 @@ export class UserService {
             }
 
 
-            await this.mailService.nodemailer.sendMail(approveRegsiterRequestResult.mailOptions!);
+            this.mailService.nodemailer.sendMail(approveRegsiterRequestResult.mailOptions!);
 
             return {
                 message: 'Email approved successfully',
@@ -75,6 +75,43 @@ export class UserService {
                 status: HttpStatus.INTERNAL_SERVER_ERROR
             }
 
+        }
+    }
+
+
+    async register(body: { email: string, password: string, token: string, name: string }): Promise<{
+        message: string,
+        status: HttpStatus
+    }> {
+        try {
+            const registerResult = await this.userDomainServices.register(body)
+
+            if (registerResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (registerResult.isError) {
+                return {
+                    message: registerResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+            this.mailService.nodemailer.sendMail(registerResult.mailOptions!);
+            return {
+                message: 'User registered successfully',
+                status: HttpStatus.CREATED
+            }
+
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
         }
     }
 

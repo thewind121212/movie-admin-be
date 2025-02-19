@@ -29,7 +29,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
             )
         }
 
-        const { isValid, email, message } = this.userSecurity.verifyJWT(token)
+        const { isValid, email } = this.userSecurity.verifyJWT(token)
         if (!isValid) {
             throw new HttpException(
                 {
