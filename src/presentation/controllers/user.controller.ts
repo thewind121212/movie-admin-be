@@ -1,5 +1,5 @@
 
-import { Controller, Body, Get, Post, Response, HttpStatus, UseGuards } from '@nestjs/common';
+import { Controller, Body, Post, Response, HttpStatus, UseGuards } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
 import { RegisterRequestGuard } from 'src/core/user/guards/registerRequest.guard';
 import { ApproveRegisterRequestGuard } from 'src/core/user/guards/approveRegisterRequest.guard';

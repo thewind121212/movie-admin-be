@@ -52,10 +52,12 @@ services:
 
   postgres:
     image: postgres:latest
+    container_name: postgres-movie-db
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: linhporo1
       POSTGRES_DB: admin_movie
+      TZ: Asia/Ho_Chi_Minh
     ports:
       - '5432:5432'
     volumes:

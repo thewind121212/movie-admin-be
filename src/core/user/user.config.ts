@@ -1,0 +1,1 @@
+export const REGISTER_REQUEST_RETRY_DAY = 3;
