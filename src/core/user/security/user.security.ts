@@ -48,6 +48,7 @@ export class UserSecurity {
     public verifyJWT(token: string): {
         message: string,
         email: string | null,
+        userId?: string | null,
         isValid: boolean,
     } {
         try {
@@ -65,6 +66,7 @@ export class UserSecurity {
             return {
                 message: 'Token is valid',
                 email: typeof decoded !== 'string' && 'email' in decoded ? decoded.email : null,
+                userId: typeof decoded !== 'string' && 'userId' in decoded ? decoded.userId : null,
                 isValid: true,
             }
 

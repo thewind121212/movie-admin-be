@@ -1,6 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
 import { RegistrationRequests, User } from '@prisma/client';
+import { RedisService } from "src/Infrastructure/redis/redis.service";
 
 
 @Injectable()
@@ -9,6 +10,7 @@ export class UserRepositories {
 
     constructor(
         private readonly prisma: PrismaService,
+        private readonly redis: RedisService
     ) { }
 
 
@@ -95,4 +97,65 @@ export class UserRepositories {
             return null
         }
     }
+
+
+    // update user
+
+    async updateUser(email: string, field: string, updateData): Promise<User | null> {
+        try {
+            const user = await this.prisma.user.update({
+                where: {
+                    email
+                },
+                data: {
+                    [field]: updateData
+                }
+            })
+            return user
+        } catch (error) {
+            this.logger.error(error)
+            return null
+        }
+    }
+
+    // write reset password password to redis
+    async writeResetPasswordToken(id: string, token: string): Promise<boolean> {
+        try {
+            await this.redis.set(id, token, 60 * 15)
+            return true
+        } catch (error) {
+            this.logger.error(error)
+            return false
+        }
+    }
+
+    // retrieve reset password token from redis
+
+    async checkIsKeyIsExist(key: string): Promise<boolean | null> {
+        try {
+            const token = await this.redis.exists(key)
+            if (token === 1) {
+                return true
+            } else {
+                return false
+            }
+        } catch (error) {
+            this.logger.error(error)
+            return null
+        }
+    }
+
+    // remove reset password token from redis
+
+    async removeResetPasswordToken(key: string): Promise<boolean> {
+        try {
+            await this.redis.del(key)
+            return true
+        } catch (error) {
+            this.logger.error(error)
+            return false
+        }
+    }
+
+
 }
