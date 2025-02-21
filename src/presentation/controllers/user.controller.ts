@@ -7,6 +7,7 @@ import { ValidateTokenRegisterRequestGuard } from 'src/core/user/guards/validate
 import { UserService } from 'src/core/user/services/user.service';
 import { ResponseType } from 'src/interface/response.interface';
 import { Register } from 'src/core/user/guards/register.guard';
+import { Login } from 'src/core/user/guards/login.guard';
 
 @Controller('user')
 export class UserController {
@@ -72,13 +73,35 @@ export class UserController {
     @Body() body: { email: string, password: string, token: string, name: string },
     @Response() res: ExpressResponse
   ) {
-    const {email, password, token, name} = body;
+    const { email, password, token, name } = body;
     const { status, message } = await this.userService.register({ email, password, token, name });
     const response: ResponseType = {
       message,
       data: null,
       created_at: new Date()
     }
+    return res.status(status).json({ ...response });
+  }
+
+  @Post('auth/login')
+  @UseGuards(Login)
+  async login(
+    @Body() body: { email: string, password: string},
+    @Response() res: ExpressResponse
+  ) {
+    const credential = body;
+
+    const { status, message, token } = await this.userService.login(credential);
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
+    if (!token && status === HttpStatus.OK) {
+      response.message = "Internal server error";
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ ...response });
+    }
+    response.data = { token };
     return res.status(status).json({ ...response });
   }
 }
