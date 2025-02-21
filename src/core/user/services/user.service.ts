@@ -186,4 +186,42 @@ export class UserService {
             }
         }
     }
+
+    async submitForgotPassword(body: { token: string, password: string }): Promise<{
+        message: string,
+        status: HttpStatus
+    }> {
+        try {
+            const submitForgotPasswordResult = await this.userDomainServices.submitForgotPassword(body)
+
+            if (submitForgotPasswordResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (submitForgotPasswordResult.isError) {
+                return {
+                    message: submitForgotPasswordResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+
+            this.mailService.nodemailer.sendMail(submitForgotPasswordResult.mailOptions!);
+
+            return {
+                message: submitForgotPasswordResult.message,
+                status: HttpStatus.OK
+            }
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
 }

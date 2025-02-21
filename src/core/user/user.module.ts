@@ -7,6 +7,7 @@ import { UserDomainServices } from './domain/user.domainServices';
 import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
 import { RegisterRequestGuard } from './guards/registerRequest.guard';
 import { UserSecurity } from './security/user.security';
+import { RedisService } from 'src/Infrastructure/redis/redis.service';
 
 @Module({
   controllers: [UserController],
@@ -16,6 +17,7 @@ import { UserSecurity } from './security/user.security';
     UserDomainServices,
     PrismaService,
     UserSecurity,
+    RedisService,
     RegisterRequestGuard],
 })
 export class UserModule { }

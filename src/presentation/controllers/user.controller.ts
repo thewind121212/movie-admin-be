@@ -10,6 +10,8 @@ import { ValidateTokenRegisterRequestGuard } from 'src/core/user/guards/validate
 import { RegisterGuard } from 'src/core/user/guards/register.guard';
 import { LoginGuard } from 'src/core/user/guards/login.guard';
 import { ForgotPasswordGuard } from 'src/core/user/guards/forgotPassword.guard';
+import { VerifyResetLinkGuard } from 'src/core/user/guards/verifyResetLink.guard';
+import { SubmitForgotPassGuard } from 'src/core/user/guards/submitForgotPassword.guard';
 
 @Controller('user')
 export class UserController {
@@ -108,14 +110,14 @@ export class UserController {
   }
 
 
-  @Post('auth/forgotPassword')
+  @Post('auth/forgot/request')
   @UseGuards(ForgotPasswordGuard)
-  async forgotPassword(
+  async requestForgotPassword(
     @Body() body: { email: string },
     @Response() res: ExpressResponse
   ) {
     const { email } = body;
-    const { status, message } = await this.userService.forgotPassword({ email});
+    const { status, message } = await this.userService.forgotPassword({ email });
     const response: ResponseType = {
       message,
       data: null,
@@ -123,4 +125,34 @@ export class UserController {
     }
     return res.status(status).json({ ...response });
   }
+
+  @Post('auth/forgot/verify')
+  @UseGuards(VerifyResetLinkGuard)
+  async forgotPassword(
+    @Body() body: { token: string },
+    @Response() res: ExpressResponse
+  ) {
+    return res.status(HttpStatus.ACCEPTED).json({
+      message: 'Reset Link is valid',
+      data: null,
+      created_at: new Date()
+    });
+  }
+
+  @Post('auth/forgot/submit')
+  @UseGuards(SubmitForgotPassGuard)
+  async submitForgotPassword(
+    @Body() body: { token: string, password: string },
+    @Response() res: ExpressResponse
+  ) {
+    const { token, password } = body;
+    const { status, message } = await this.userService.submitForgotPassword({ token, password });
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
+  }
+
 }

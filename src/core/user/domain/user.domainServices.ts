@@ -190,11 +190,7 @@ export class UserDomainServices {
         message: string
     }> {
 
-
-
         try {
-
-
             // is email valid
             const user = await this.userRepositories.findUser(credentials.email)
             if (!user) {
@@ -259,11 +255,20 @@ export class UserDomainServices {
             if (!forgotPasswordToken) {
                 throw new Error('Error signing token')
             }
+            const reditsWriteResult = await this.userRepositories.writeResetPasswordToken(user.id, forgotPasswordToken)
+
+            if (!reditsWriteResult) {
+                return {
+                    isError: true,
+                    message: 'Error writing reset password token'
+                }
+            }
 
             const emailContent = registerEmailTemplate(
                 'Your reset password request!',
                 ` 
                 You have requested to reset your password. Please click the link below to create a new password. This link will expire in 15 minutes.
+                If you did not request this, please ignore this email.
                 <br/>
                 <a href="${process.env.FRONTEND_URL}/reset_password?p=${forgotPasswordToken}"
                 style="color: rgb(0, 141, 163); --darkreader-inline-color: #5ae9ff; margin-top: 10px;"
@@ -294,6 +299,75 @@ export class UserDomainServices {
                 message: 'Error forgot password'
             }
         }
+    }
+
+    async submitForgotPassword(body: { token: string, password: string }): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        message: string
+        mailOptions?: MailOptions
+    }> {
+        try {
+            const tokenResult = this.userSecurityServices.verifyJWT(body.token)
+            if (!tokenResult.isValid || !tokenResult.userId || !tokenResult.email) {
+                return {
+                    isError: true,
+                    message: 'Invalid token'
+                }
+            }
+            const isTokenUsed = await this.userRepositories.checkIsKeyIsExist(tokenResult.userId)
+            if (isTokenUsed === null) {
+                throw new Error('Error checking token')
+            }
+
+            if (!isTokenUsed) {
+                return {
+                    isError: true,
+                    message: 'Token already used'
+                }
+            }
+
+            const newPass = await crypto.hash(body.password, 10)
+
+            const user = await this.userRepositories.updateUser(tokenResult.email, 'password', newPass)
+
+            if (!user) {
+                throw new Error('Error updating user password')
+            }
+
+            const removeResult = await this.userRepositories.removeResetPasswordToken(tokenResult.userId)
+
+            if (!removeResult) {
+                throw new Error('Error removing reset password token')
+            }
+
+            const emailContent = registerEmailTemplate(
+                'Your password has been reset!',
+                "You have successfully reset your password. You can now login to your account."
+            )
+
+
+            const mailOptions = {
+                from: 'admin@wliafdew.dev',
+                to: tokenResult.email,
+                subject: 'Register request',
+                html: emailContent,
+            }
+
+            return {
+                isError: false,
+                message: 'Register request created successfully',
+                mailOptions,
+            }
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error submit forgot password'
+            }
+        }
+
     }
 
 }
