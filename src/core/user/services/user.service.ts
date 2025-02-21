@@ -115,4 +115,40 @@ export class UserService {
         }
     }
 
+
+    async login(credentials: { email: string, password: string }): Promise<{
+        message: string,
+        status: HttpStatus
+        token?: string
+    }> {
+        try {
+            const loginResult = await this.userDomainServices.login(credentials)
+
+            if (loginResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (loginResult.isError) {
+                return {
+                    message: loginResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+            return {
+                message: loginResult.message,
+                token: loginResult.token,
+                status: HttpStatus.OK
+            }
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
 }

@@ -1,6 +1,6 @@
 
 import { Injectable, Logger } from '@nestjs/common';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { RegisterRequestJWTPayloadType } from '../type/User.type';
 import ms from 'ms';
 

@@ -5,7 +5,7 @@ import { MailOptions } from "nodemailer/lib/smtp-transport";
 import { UserSecurity } from "../security/user.security";
 import { REGISTER_REQUEST_RETRY_DAY } from "../user.config";
 import { DateTime } from 'luxon';
-import  crypto from 'bcrypt'
+import crypto from 'bcrypt'
 
 
 
@@ -150,7 +150,7 @@ export class UserDomainServices {
                 email: data.email,
                 password: hashedPassword,
                 name: data.name
-                
+
             })
 
             const emailContent = registerEmailTemplate(
@@ -181,12 +181,62 @@ export class UserDomainServices {
             }
 
         }
+    }
 
-        return {
-            isError: true,
-            isInternalError: true,
-            message: 'Error approving register request'
+    async login(credentials: { email: string, password: string }): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        token?: string,
+        message: string
+    }> {
+
+
+
+        try {
+
+
+            // is email valid
+            const user = await this.userRepositories.findUser(credentials.email)
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found'
+                }
+            }
+
+
+            //compare password
+            const isPasswordMatch = await crypto.compare(credentials.password, user.password)
+
+            if (!isPasswordMatch) {
+                return {
+                    isError: true,
+                    message: 'Invalid password'
+                }
+            }
+
+            //after all valid gen token 
+
+            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id}, '3d', 'login')
+            if (!token) {
+                throw new Error('Error signing token')
+            }
+
+            return {
+                isError: false,
+                message: 'User logged in successfully',
+                token,
+            }
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error login'
+            }
+
         }
+
     }
 
 }
