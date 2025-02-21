@@ -7,7 +7,7 @@ import { UserSecurity } from '../security/user.security';
 
 
 @Injectable()
-export class Register implements CanActivate {
+export class RegisterGuard implements CanActivate {
 
     constructor(
         private readonly userRepositories: UserRepositories,
