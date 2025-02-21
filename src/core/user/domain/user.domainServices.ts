@@ -217,7 +217,7 @@ export class UserDomainServices {
 
             //after all valid gen token 
 
-            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id}, '3d', 'login')
+            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '3d', 'login')
             if (!token) {
                 throw new Error('Error signing token')
             }
@@ -237,6 +237,63 @@ export class UserDomainServices {
 
         }
 
+    }
+
+
+    async forgotPassword(body: { email: string }): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        message: string,
+        mailOptions?: MailOptions
+    }> {
+        try {
+            const user = await this.userRepositories.findUser(body.email)
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found'
+                }
+            }
+
+            const forgotPasswordToken = this.userSecurityServices.signJWT({ email: body.email, userId: user.id }, '15m', 'forgot-password')
+            if (!forgotPasswordToken) {
+                throw new Error('Error signing token')
+            }
+
+            const emailContent = registerEmailTemplate(
+                'Your reset password request!',
+                ` 
+                You have requested to reset your password. Please click the link below to create a new password. This link will expire in 15 minutes.
+                <br/>
+                <a href="${process.env.FRONTEND_URL}/reset_password?p=${forgotPasswordToken}"
+                style="color: rgb(0, 141, 163); --darkreader-inline-color: #5ae9ff; margin-top: 10px;"
+                target="_blank"
+                data-saferedirecturl="">Register Link!
+               </a> 
+            `
+            )
+
+            const mailOptions = {
+                from: 'admin@wliafdew.dev',
+                to: body.email,
+                subject: 'Register request',
+                html: emailContent,
+            }
+
+            return {
+                isError: false,
+                message: 'Forgot password email sent',
+                mailOptions
+            }
+
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error forgot password'
+            }
+        }
     }
 
 }

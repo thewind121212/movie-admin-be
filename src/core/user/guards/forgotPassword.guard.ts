@@ -1,15 +1,16 @@
 
+
 import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
 import { HttpStatusCode } from 'axios';
 
 
 @Injectable()
-export class LoginGuard implements CanActivate {
+export class ForgotPasswordGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const { email, password} = request.body
-        if (!email || !password) {
+        const { email} = request.body
+        if (!email) {
             throw new HttpException(
                 {
                     status: 'fail',

@@ -1,13 +1,15 @@
 
 import { Controller, Body, Post, Response, HttpStatus, UseGuards } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
+import { UserService } from 'src/core/user/services/user.service';
+import { ResponseType } from 'src/interface/response.interface';
+//guard
 import { RegisterRequestGuard } from 'src/core/user/guards/registerRequest.guard';
 import { ApproveRegisterRequestGuard } from 'src/core/user/guards/approveRegisterRequest.guard';
 import { ValidateTokenRegisterRequestGuard } from 'src/core/user/guards/validateJWTRegisterRequest.guard';
-import { UserService } from 'src/core/user/services/user.service';
-import { ResponseType } from 'src/interface/response.interface';
-import { Register } from 'src/core/user/guards/register.guard';
-import { Login } from 'src/core/user/guards/login.guard';
+import { RegisterGuard } from 'src/core/user/guards/register.guard';
+import { LoginGuard } from 'src/core/user/guards/login.guard';
+import { ForgotPasswordGuard } from 'src/core/user/guards/forgotPassword.guard';
 
 @Controller('user')
 export class UserController {
@@ -68,7 +70,7 @@ export class UserController {
 
 
   @Post('auth/register')
-  @UseGuards(Register)
+  @UseGuards(RegisterGuard)
   async register(
     @Body() body: { email: string, password: string, token: string, name: string },
     @Response() res: ExpressResponse
@@ -84,9 +86,9 @@ export class UserController {
   }
 
   @Post('auth/login')
-  @UseGuards(Login)
+  @UseGuards(LoginGuard)
   async login(
-    @Body() body: { email: string, password: string},
+    @Body() body: { email: string, password: string },
     @Response() res: ExpressResponse
   ) {
     const credential = body;
@@ -102,6 +104,23 @@ export class UserController {
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ ...response });
     }
     response.data = { token };
+    return res.status(status).json({ ...response });
+  }
+
+
+  @Post('auth/forgotPassword')
+  @UseGuards(ForgotPasswordGuard)
+  async forgotPassword(
+    @Body() body: { email: string },
+    @Response() res: ExpressResponse
+  ) {
+    const { email } = body;
+    const { status, message } = await this.userService.forgotPassword({ email});
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
     return res.status(status).json({ ...response });
   }
 }
