@@ -28,7 +28,7 @@ export class UserDomainServices {
         try {
             const [registerRequest, user] = await Promise.all([
                 this.userRepositories.findRegisterRequest(email),
-                this.userRepositories.findUser(email)
+                this.userRepositories.getUser(email)
             ])
 
             if (user) {
@@ -193,7 +193,7 @@ export class UserDomainServices {
 
         try {
             // is email valid
-            const user = await this.userRepositories.findUser(credentials.email)
+            const user = await this.userRepositories.getUser(credentials.email)
             if (!user) {
                 return {
                     isError: true,
@@ -250,7 +250,7 @@ export class UserDomainServices {
         mailOptions?: MailOptions
     }> {
         try {
-            const user = await this.userRepositories.findUser(body.email)
+            const user = await this.userRepositories.getUser(body.email)
             if (!user) {
                 return {
                     isError: true,
@@ -377,4 +377,60 @@ export class UserDomainServices {
 
     }
 
+
+
+    async enableTOTP(email: string, password: string): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        message: string
+        qrCodeImageURL?: string,
+        mailOptions?: MailOptions
+    }> {
+
+        try {
+            const user = await this.userRepositories.getUser(email)
+
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found',
+                }
+            }
+
+            if (user?.totpSecret && user.totpSecret !== '') {
+                return {
+                    isError: true,
+                    message: 'User already have 2FA TOTP enable',
+                }
+            }
+
+            const isPasswordMatch = await crypto.compare(password, user.password)
+            if (!isPasswordMatch) {
+                return {
+                    isError: true,
+                    message: 'Invalid password'
+                }
+            }
+
+            const genTOTP = await this.userSecurityServices.generateOTP(email)
+
+            if (!genTOTP.qrCodeImageURL) {
+                throw new Error('Error generating qr code')
+            }
+
+            return {
+                isError: false,
+                message: 'TOTP enabled successfully',
+                qrCodeImageURL: genTOTP.qrCodeImageURL
+            }
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error enabling TOTP'
+            }
+        }
+
+    }
 }

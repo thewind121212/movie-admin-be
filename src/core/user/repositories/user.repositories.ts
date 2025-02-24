@@ -67,7 +67,7 @@ export class UserRepositories {
     }
 
     //find user in user db 
-    async findUser(email: string): Promise<User | null> {
+    async getUser(email: string): Promise<User | null> {
         try {
             const user = await this.prisma.user.findUnique({
                 where: {
@@ -101,7 +101,7 @@ export class UserRepositories {
 
     // update user
 
-    async updateUser(email: string, field: string, updateData): Promise<User | null> {
+    async updateUser(email: string, field: string, updateData : any): Promise<User | null> {
         try {
             const user = await this.prisma.user.update({
                 where: {

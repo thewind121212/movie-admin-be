@@ -14,6 +14,7 @@ import { VerifyResetLinkGuard } from 'src/core/user/guards/verifyResetLink.guard
 import { SubmitForgotPassGuard } from 'src/core/user/guards/submitForgotPassword.guard';
 import { verifyAccessTokenGuard } from 'src/core/user/guards/verifyAccessToken.guard';
 import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.guard';
+import { enableTOTPGuard } from 'src/core/user/guards/enableTOTP.guard';
 
 @Controller('user')
 export class UserController {
@@ -186,6 +187,25 @@ export class UserController {
       },
       created_at: new Date()
     })
+  }
+
+
+
+  @Post('auth/2FA/enableTOTP')
+  @UseGuards(enableTOTPGuard)
+  async enable(
+    @Body() body: { email: string, password: string },
+    @Response() res: ExpressResponse
+  ) {
+    const { status, message, qrCodeImageURL } = await this.userService.enableTOTP(body.email, body.password);
+    const response: ResponseType = {
+      message,
+      data: {
+        qrCodeImageURL: qrCodeImageURL ? qrCodeImageURL : null
+      },
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
   }
 
 }

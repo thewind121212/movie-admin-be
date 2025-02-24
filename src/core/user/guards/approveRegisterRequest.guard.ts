@@ -36,7 +36,7 @@ export class ApproveRegisterRequestGuard implements CanActivate {
         try {
 
              [isUserExist, registerRequest] = await Promise.all([
-                this.userRepository.findUser(body.email),
+                this.userRepository.getUser(body.email),
                 this.userRepository.findRegisterRequest(body.email)
             ])
         } catch (error) {

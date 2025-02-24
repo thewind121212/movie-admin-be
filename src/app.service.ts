@@ -1,15 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { NodemailerService } from './Infrastructure/nodemailer/nodemailer.service';
 import { registerEmailTemplate } from './email-templates/register';
+import { UserSecurity } from './core/user/security/user.security';
 
 @Injectable()
 export class AppService {
 
   constructor(
     private readonly nodeMailerService: NodemailerService,
+    private readonly userSecurity: UserSecurity
   ) { }
 
-  ping(): string {
+  async ping() {
+    const r = await this.userSecurity.verifyOTP('nhocdl.poro1@gmail.com', '611595')
+    console.log(r)
     return 'pong';
   }
 
