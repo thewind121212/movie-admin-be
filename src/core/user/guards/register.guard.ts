@@ -44,7 +44,7 @@ export class RegisterGuard implements CanActivate {
 
         // check if email already exist
 
-        const user = await this.userRepositories.findUser(email)
+        const user = await this.userRepositories.getUser(email)
         if (user) {
             throw new HttpException(
                 {

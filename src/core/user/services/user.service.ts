@@ -226,4 +226,41 @@ export class UserService {
         }
     }
 
+
+    async enableTOTP(email: string, password : string): Promise<{
+        message: string,
+        status: HttpStatus
+        qrCodeImageURL?: string
+    }> {
+        try {
+            const enableTOTPResult = await this.userDomainServices.enableTOTP(email, password)
+
+            if (enableTOTPResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (enableTOTPResult.isError) {
+                return {
+                    message: enableTOTPResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+            return {
+                message: enableTOTPResult.message,
+                status: HttpStatus.CREATED,
+                qrCodeImageURL: enableTOTPResult.qrCodeImageURL
+            }
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
 }

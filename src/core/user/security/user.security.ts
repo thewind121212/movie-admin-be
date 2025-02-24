@@ -1,13 +1,22 @@
 
 import { Injectable, Logger } from '@nestjs/common';
-import jwt from 'jsonwebtoken';
 import { RegisterRequestJWTPayloadType } from '../type/User.type';
-import ms from 'ms';
+import { UserRepositories } from '../repositories/user.repositories';
+import jwt from 'jsonwebtoken';
+import otpauth from 'otpauth'
+import ms from 'ms'
+import qr from 'qrcode'
 
 
 @Injectable()
 export class UserSecurity {
     private readonly logger = new Logger(UserSecurity.name)
+
+    constructor(
+        private readonly userRepositories: UserRepositories
+    ) {
+    }
+
 
     // sign JWT 
     public signJWT(data: any, exp: ms.StringValue, purpose: string): string | null {
@@ -92,6 +101,124 @@ export class UserSecurity {
                     isValid: false,
                 }
             }
+        }
+    }
+
+
+    // generate OTP
+
+    public async generateOTP(email: string): Promise<{
+        qrCodeImageURL?: string,
+        isError: boolean,
+        isInterNalError: boolean,
+        message: string,
+    }> {
+
+        try {
+
+
+
+            //gen secret
+            const secret = new otpauth.Secret({ size: 20 }).base32
+
+
+            //gen totp
+            const totp = new otpauth.TOTP({
+                issuer: 'Wliafdew Movie Uploader',
+                label: email,
+                algorithm: 'SHA256',
+                digits: 6,
+                period: 30,
+                secret: secret,
+            })
+
+            // save secret to db 
+            this.userRepositories.updateUser(email, 'totpSecret', secret)
+
+            const qrCode = await qr.toDataURL(totp.toString())
+
+
+            return {
+                isError: false,
+                isInterNalError: false,
+                message: 'OTP generated',
+                qrCodeImageURL: qrCode,
+            }
+
+
+        } catch (error) {
+            this.logger.error(error)
+            return {
+                isError: true,
+                isInterNalError: true,
+                message: 'Internal server error',
+            }
+
+        }
+    }
+
+
+    // verify OTP
+
+    public async verifyOTP(email: string, token: string): Promise<{
+        isInterNalError: boolean,
+        isError: boolean,
+        message: string,
+    }> {
+
+        try {
+            const user = await this.userRepositories.getUser(email)
+
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found',
+                    isInterNalError: false,
+                }
+            }
+
+            if (!user.totpSecret) {
+                return {
+                    isError: true,
+                    message: 'User does not have 2FA TOTP enable',
+                    isInterNalError: false,
+                }
+            }
+
+            const totp = new otpauth.TOTP({
+                issuer: 'Wliafdew Movie Uploader',
+                label: email,
+                algorithm: 'SHA256',
+                digits: 6,
+                period: 30,
+                secret: user.totpSecret,
+            })
+
+            const isValid = totp.validate({ token, window: 1 })
+
+            if (isValid === 0 || isValid === -1) {
+                return {
+                    isError: false,
+                    isInterNalError: false,
+                    message: 'TOTP is valid',
+                }
+            }
+
+            return {
+                isError: true,
+                isInterNalError: false,
+                message: 'TOTP is invalid',
+            }
+
+
+        } catch (error) {
+            this.logger.error(error)
+            return {
+                isError: true,
+                isInterNalError: true,
+                message: 'Internal server error',
+            }
+
         }
     }
 

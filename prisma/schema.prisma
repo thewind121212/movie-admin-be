@@ -57,6 +57,7 @@ model User {
   password  String
   name      String
   createdAt DateTime @default(now())
+  totpSecret String?
   updatedAt DateTime @updatedAt @default(now())
 }
 

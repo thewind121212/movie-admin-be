@@ -11,13 +11,7 @@ export class AppController {
   async ping(
     @Response() res: ExpressResponse
   ) {
-    // return this.appService.ping();
-
-    return res.status(200).json({
-      message: 'pong',
-      data: null,
-      created_at: new Date()
-    });
-
+    this.appService.ping();
+    return res.status(200).json({ message: 'pong' });
   }
 }

@@ -61,7 +61,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
             )
         }
 
-        const isUserExist = await this.userRepositories.findUser(email)
+        const isUserExist = await this.userRepositories.getUser(email)
 
         if (isUserExist) {
             throw new HttpException(
