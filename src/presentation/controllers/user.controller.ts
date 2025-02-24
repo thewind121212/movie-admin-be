@@ -12,6 +12,8 @@ import { LoginGuard } from 'src/core/user/guards/login.guard';
 import { ForgotPasswordGuard } from 'src/core/user/guards/forgotPassword.guard';
 import { VerifyResetLinkGuard } from 'src/core/user/guards/verifyResetLink.guard';
 import { SubmitForgotPassGuard } from 'src/core/user/guards/submitForgotPassword.guard';
+import { verifyAccessTokenGuard } from 'src/core/user/guards/verifyAccessToken.guard';
+import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.guard';
 
 @Controller('user')
 export class UserController {
@@ -95,17 +97,17 @@ export class UserController {
   ) {
     const credential = body;
 
-    const { status, message, token } = await this.userService.login(credential);
+    const { status, message, token, refreshToken } = await this.userService.login(credential);
     const response: ResponseType = {
       message,
       data: null,
       created_at: new Date()
     }
-    if (!token && status === HttpStatus.OK) {
+    if ((!token || !refreshToken) && status === HttpStatus.OK) {
       response.message = "Internal server error";
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ ...response });
     }
-    response.data = { token };
+    response.data = { token, refreshToken };
     return res.status(status).json({ ...response });
   }
 
@@ -155,4 +157,38 @@ export class UserController {
     return res.status(status).json({ ...response });
   }
 
+
+  @Post('auth/token/verifyAccessToken')
+  @UseGuards(verifyAccessTokenGuard)
+  async verifyAccessToken(
+    @Body() body: { token: string, password: string },
+    @Response() res: ExpressResponse
+  ) {
+    return res.status(HttpStatus.ACCEPTED).json({
+      message: 'Access token is valid',
+      data: null,
+      created_at: new Date()
+    })
+  }
+
+
+  @Post('auth/token/refreshAccessToken')
+  @UseGuards(refreshAccessTokenGuard)
+  async refeshAccessToken(
+    @Body() body: { token: string },
+    @Response() res: ExpressResponse
+  ) {
+
+    return res.status(HttpStatus.CREATED).json({
+      message: 'Token is refreshed',
+      data: {
+        newAccessToken: body.token
+      },
+      created_at: new Date()
+    })
+  }
+
 }
+
+
+

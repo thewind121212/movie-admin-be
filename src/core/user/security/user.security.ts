@@ -46,8 +46,8 @@ export class UserSecurity {
     // verify JWT
 
     public verifyJWT(token: string): {
-        message: string,
-        email: string | null,
+        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:',
+        email: string | null
         userId?: string | null,
         isValid: boolean,
     } {
@@ -73,11 +73,24 @@ export class UserSecurity {
 
 
         } catch (error) {
-            this.logger.error(error.message)
-            return {
-                message: error.message,
-                email: null,
-                isValid: false,
+            if (error instanceof jwt.TokenExpiredError) {
+                return {
+                    message: 'Token is expired',
+                    email: null,
+                    isValid: false,
+                }
+            } else if (error instanceof jwt.JsonWebTokenError) {
+                return {
+                    message: 'Invalid token',
+                    email: null,
+                    isValid: false,
+                }
+            } else {
+                return {
+                    message: 'Token verification error:',
+                    email: null,
+                    isValid: false,
+                }
             }
         }
     }

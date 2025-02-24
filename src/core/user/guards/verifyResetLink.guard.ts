@@ -37,7 +37,7 @@ export class VerifyResetLinkGuard implements CanActivate {
                 {
                     status: 'fail',
                     data: null,
-                    message: 'Invalid token please provide a valid token'
+                    message: tokenResult.message
                 },
                 HttpStatusCode.BadRequest
             )

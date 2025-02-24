@@ -120,6 +120,7 @@ export class UserService {
         message: string,
         status: HttpStatus
         token?: string
+        refreshToken?: string
     }> {
         try {
             const loginResult = await this.userDomainServices.login(credentials)
@@ -141,6 +142,7 @@ export class UserService {
             return {
                 message: loginResult.message,
                 token: loginResult.token,
+                refreshToken: loginResult.refreshToken,
                 status: HttpStatus.OK
             }
 

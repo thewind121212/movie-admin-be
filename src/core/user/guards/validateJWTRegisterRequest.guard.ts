@@ -38,13 +38,13 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
 
 
 
-        const { isValid, email } = this.userSecurity.verifyJWT(token)
+        const { isValid, email, message } = this.userSecurity.verifyJWT(token)
         if (!isValid) {
             throw new HttpException(
                 {
                     status: 'Forbidden',
                     data: null,
-                    message: 'Invalid token please try again'
+                    message: message,
                 },
                 HttpStatusCode.Forbidden
             )
@@ -58,8 +58,9 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
                     message: 'Invalid token please try again'
                 },
                 HttpStatusCode.Forbidden
-        )}
-    
+            )
+        }
+
         const isUserExist = await this.userRepositories.findUser(email)
 
         if (isUserExist) {
