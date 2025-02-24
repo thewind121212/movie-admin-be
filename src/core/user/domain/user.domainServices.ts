@@ -187,6 +187,7 @@ export class UserDomainServices {
         isError: boolean,
         isInternalError?: boolean,
         token?: string,
+        refreshToken?: string,
         message: string
     }> {
 
@@ -211,17 +212,23 @@ export class UserDomainServices {
                 }
             }
 
-            //after all valid gen token 
-
-            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '3d', 'login')
+            //after all valid gen access token  
+            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '1h', 'login')
             if (!token) {
                 throw new Error('Error signing token')
+            }
+
+            //after gen acces token gen refresh token
+            const refreshToken = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '7d', 'refresh')
+            if (!refreshToken) {
+                throw new Error('Error signing refresh token')
             }
 
             return {
                 isError: false,
                 message: 'User logged in successfully',
                 token,
+                refreshToken,
             }
 
         } catch (error) {
@@ -270,10 +277,10 @@ export class UserDomainServices {
                 You have requested to reset your password. Please click the link below to create a new password. This link will expire in 15 minutes.
                 If you did not request this, please ignore this email.
                 <br/>
-                <a href="${process.env.FRONTEND_URL}/reset_password?p=${forgotPasswordToken}"
+                <a href="${process.env.FRONTEND_URL}/reset-password?p=${forgotPasswordToken}"
                 style="color: rgb(0, 141, 163); --darkreader-inline-color: #5ae9ff; margin-top: 10px;"
                 target="_blank"
-                data-saferedirecturl="">Register Link!
+                data-saferedirecturl="">Reset Link!
                </a> 
             `
             )
