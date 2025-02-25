@@ -14,7 +14,8 @@ import { VerifyResetLinkGuard } from 'src/core/user/guards/verifyResetLink.guard
 import { SubmitForgotPassGuard } from 'src/core/user/guards/submitForgotPassword.guard';
 import { verifyAccessTokenGuard } from 'src/core/user/guards/verifyAccessToken.guard';
 import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.guard';
-import { enableTOTPGuard } from 'src/core/user/guards/enableTOTP.guard';
+import { toggleTOTPGuard } from 'src/core/user/guards/toggleTOTP.guard';
+import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
 
 @Controller('user')
 export class UserController {
@@ -192,8 +193,8 @@ export class UserController {
 
 
   @Post('auth/2FA/enableTOTP')
-  @UseGuards(enableTOTPGuard)
-  async enable(
+  @UseGuards(toggleTOTPGuard)
+  async enableTOTP(
     @Body() body: { email: string, password: string },
     @Response() res: ExpressResponse
   ) {
@@ -203,6 +204,37 @@ export class UserController {
       data: {
         qrCodeImageURL: qrCodeImageURL ? qrCodeImageURL : null
       },
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
+  }
+
+  @Post('auth/2FA/disableTOTP')
+  @UseGuards(toggleTOTPGuard)
+  async disableTOTP(
+    @Body() body: { email: string, password: string },
+    @Response() res: ExpressResponse
+  ) {
+    const { status, message } = await this.userService.disableTOTP(body.email, body.password);
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date()
+    }
+    return res.status(status).json({ ...response });
+  }
+
+
+  @Post('auth/2FA/verifyTOTP')
+  @UseGuards(verifyTOTPGuard)
+  async verifyTOTP(
+    @Body() body: { token: string, email: string },
+    @Response() res: ExpressResponse
+  ) {
+    const { status, message } = await this.userService.verifyTOTP(body.email, body.token);
+    const response: ResponseType = {
+      message,
+      data: null,
       created_at: new Date()
     }
     return res.status(status).json({ ...response });

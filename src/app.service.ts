@@ -12,8 +12,6 @@ export class AppService {
   ) { }
 
   async ping() {
-    const r = await this.userSecurity.verifyOTP('nhocdl.poro1@gmail.com', '611595')
-    console.log(r)
     return 'pong';
   }
 

@@ -384,7 +384,6 @@ export class UserDomainServices {
         isInternalError?: boolean,
         message: string
         qrCodeImageURL?: string,
-        mailOptions?: MailOptions
     }> {
 
         try {
@@ -429,6 +428,112 @@ export class UserDomainServices {
                 isError: true,
                 isInternalError: true,
                 message: 'Error enabling TOTP'
+            }
+        }
+
+    }
+
+
+    async disableTOTP(email: string, password: string): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        message: string
+    }> {
+
+        try {
+            const user = await this.userRepositories.getUser(email)
+
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found',
+                }
+            }
+
+
+            if (!user?.totpSecret || user.totpSecret === '') {
+                return {
+                    isError: true,
+                    message: 'User does not have 2FA TOTP enable',
+                }
+            }
+
+            const isPasswordMatch = await crypto.compare(password, user.password)
+            if (!isPasswordMatch) {
+                return {
+                    isError: true,
+                    message: 'Invalid password'
+                }
+            }
+
+            await this.userRepositories.updateUser(email, 'totpSecret', null)
+
+
+            return {
+                isError: false,
+                message: 'TOTP disable successfully',
+            }
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error disabling TOTP'
+            }
+        }
+
+    }
+
+
+
+    async verifyTOTP(email: string, token: string): Promise<{
+        isError: boolean,
+        isInternalError?: boolean,
+        message: string
+    }> {
+
+        try {
+            const user = await this.userRepositories.getUser(email)
+
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found',
+                }
+            }
+
+
+            if (!user?.totpSecret || user.totpSecret === '') {
+                return {
+                    isError: true,
+                    message: 'User does not have 2FA TOTP enable',
+                }
+            }
+
+            const verifyResult = await this.userSecurityServices.verifyOTP(email, token, user)
+
+            if (verifyResult.isError) {
+                return {
+                    isError: true,
+                    message: verifyResult.message
+                }
+            }
+
+            if (verifyResult.isInterNalError) {
+                throw new Error('Error verifying OTP')
+            }
+
+
+            return {
+                isError: false,
+                message: 'Access granted TOTP verified successfully',
+            }
+
+        } catch (error) {
+            return {
+                isError: true,
+                isInternalError: true,
+                message: 'Error verifying TOTP'
             }
         }
 
