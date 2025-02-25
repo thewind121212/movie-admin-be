@@ -524,13 +524,25 @@ export class UserDomainServices {
     }> {
 
         try {
-            const userGet = await this.userRepositories.getUser(email)
+            const user = await this.userRepositories.getUser(email)
 
-            const [user, cachingLogin] = await Promise.all([
-                this.userRepositories.getUser(email),
-                this.userRepositories.getValueFromRedis(`${userGet?.id}${LOGIN_EXT}`)
-            ])
 
+            if (!user) {
+                return {
+                    isError: true,
+                    message: 'User not found',
+                }
+            }
+
+
+            if (!user?.totpSecret || user.totpSecret === '') {
+                return {
+                    isError: true,
+                    message: 'User does not have 2FA TOTP enable',
+                }
+            }
+
+            const cachingLogin = await  this.userRepositories.getValueFromRedis(`${user?.id}${LOGIN_EXT}`)
             if (!cachingLogin) {
                 return {
                     isError: true,
@@ -549,20 +561,6 @@ export class UserDomainServices {
                 throw new Error('Error getting token')
             }
 
-            if (!user) {
-                return {
-                    isError: true,
-                    message: 'User not found',
-                }
-            }
-
-
-            if (!user?.totpSecret || user.totpSecret === '') {
-                return {
-                    isError: true,
-                    message: 'User does not have 2FA TOTP enable',
-                }
-            }
 
             const verifyResult = await this.userSecurityServices.verifyOTP(email, token, user)
 
