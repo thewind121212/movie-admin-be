@@ -119,6 +119,7 @@ export class UserService {
     async login(credentials: { email: string, password: string }): Promise<{
         message: string,
         status: HttpStatus
+        twoFAnonce?: string
         token?: string
         refreshToken?: string
     }> {
@@ -136,6 +137,14 @@ export class UserService {
                 return {
                     message: loginResult.message,
                     status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+            if (loginResult.is2FAEnabled) {
+                return {
+                    message: '2FA enabled',
+                    status: HttpStatus.CREATED,
+                    twoFAnonce: loginResult.twoFAnonce
                 }
             }
 
@@ -227,7 +236,7 @@ export class UserService {
     }
 
 
-    async enableTOTP(email: string, password : string): Promise<{
+    async enableTOTP(email: string, password: string): Promise<{
         message: string,
         status: HttpStatus
         qrCodeImageURL?: string
@@ -265,7 +274,7 @@ export class UserService {
 
 
 
-    async disableTOTP(email: string, password : string): Promise<{
+    async disableTOTP(email: string, password: string): Promise<{
         message: string,
         status: HttpStatus
         qrCodeImageURL?: string
@@ -301,7 +310,7 @@ export class UserService {
     }
 
 
-    async verifyTOTP(email: string, token : string): Promise<{
+    async verifyTOTP(email: string, token: string): Promise<{
         message: string,
         status: HttpStatus
         qrCodeImageURL?: string

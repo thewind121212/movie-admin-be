@@ -4,6 +4,7 @@ import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestj
 import { HttpStatusCode } from 'axios';
 import { UserSecurity } from '../security/user.security';
 import { UserRepositories } from '../repositories/user.repositories';
+import { FORGOT_PASS_EXT } from '../user.config';
 
 
 @Injectable()
@@ -45,7 +46,7 @@ export class VerifyResetLinkGuard implements CanActivate {
 
         // check if this token is user or not
 
-        const isUsed = await this.userRepositories.checkIsKeyIsExist(tokenResult.userId)
+        const isUsed = await this.userRepositories.checkIsKeyIsExist(tokenResult.userId + FORGOT_PASS_EXT)
 
         if (isUsed === null) {
             throw new HttpException(
@@ -64,7 +65,7 @@ export class VerifyResetLinkGuard implements CanActivate {
                 {
                     status: 'fail',
                     data: null,
-                    message: 'Your used this link to change your password already!'
+                    message: 'Your used this link or it expired please try again!'
                 },
                 HttpStatusCode.BadRequest
             )

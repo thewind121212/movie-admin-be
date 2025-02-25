@@ -2,6 +2,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { PrismaService } from "src/Infrastructure/prisma-client/prisma-client.service";
 import { RegistrationRequests, User } from '@prisma/client';
 import { RedisService } from "src/Infrastructure/redis/redis.service";
+import ms from 'ms'
 
 
 @Injectable()
@@ -101,7 +102,7 @@ export class UserRepositories {
 
     // update user
 
-    async updateUser(email: string, field: string, updateData : any): Promise<User | null> {
+    async updateUser(email: string, field: string, updateData: any): Promise<User | null> {
         try {
             const user = await this.prisma.user.update({
                 where: {
@@ -119,9 +120,9 @@ export class UserRepositories {
     }
 
     // write reset password password to redis
-    async writeResetPasswordToken(id: string, token: string): Promise<boolean> {
+    async writeToRedis(id: string, token: string, ex: ms.StringValue): Promise<boolean> {
         try {
-            await this.redis.set(id, token, 60 * 15)
+            await this.redis.set(id, token, ms(ex) / 1000)
             return true
         } catch (error) {
             this.logger.error(error)
@@ -147,7 +148,7 @@ export class UserRepositories {
 
     // remove reset password token from redis
 
-    async removeResetPasswordToken(key: string): Promise<boolean> {
+    async removeKey(key: string): Promise<boolean> {
         try {
             await this.redis.del(key)
             return true
@@ -157,5 +158,22 @@ export class UserRepositories {
         }
     }
 
+    // get value from redis
+
+    async getValueFromRedis(key: string): Promise<string | null> {
+        try {
+            const value = await this.redis.get(key)
+            if (!value) {
+                return null
+            }
+
+            const valueAsJson = JSON.parse(value)
+
+            return valueAsJson
+        } catch (error) {
+            this.logger.error(error)
+            return null
+        }
+    }
 
 }

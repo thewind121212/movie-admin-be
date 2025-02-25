@@ -6,6 +6,8 @@ import { UserSecurity } from "../security/user.security";
 import { REGISTER_REQUEST_RETRY_DAY } from "../user.config";
 import { DateTime } from 'luxon';
 import crypto from 'bcrypt'
+import { FORGOT_PASS_EXT, LOGIN_EXT } from "../user.config";
+import { is } from "drizzle-orm";
 
 
 
@@ -189,6 +191,8 @@ export class UserDomainServices {
         token?: string,
         refreshToken?: string,
         message: string
+        is2FAEnabled?: boolean,
+        twoFAnonce?: string
     }> {
 
         try {
@@ -222,6 +226,31 @@ export class UserDomainServices {
             const refreshToken = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '7d', 'refresh')
             if (!refreshToken) {
                 throw new Error('Error signing refresh token')
+            }
+
+
+            //if 2fa is enable
+            if (user.totpSecret && user.totpSecret !== '') {
+                // generate nonce
+                const nonce = this.userSecurityServices.genNonce()
+
+                //save nonce to redis
+                const reditsWriteResult = await this.userRepositories.writeToRedis(`${user.id}${LOGIN_EXT}`, JSON.stringify({
+                    token,
+                    nonce,
+                    refreshToken,
+                }), '15m')
+
+                if (!reditsWriteResult) {
+                    throw new Error('Error writing nonce')
+                }
+
+                return {
+                    isError: false,
+                    message: 'User need to verify TOTP',
+                    is2FAEnabled: true,
+                    twoFAnonce: nonce
+                }
             }
 
             return {
@@ -262,7 +291,7 @@ export class UserDomainServices {
             if (!forgotPasswordToken) {
                 throw new Error('Error signing token')
             }
-            const reditsWriteResult = await this.userRepositories.writeResetPasswordToken(user.id, forgotPasswordToken)
+            const reditsWriteResult = await this.userRepositories.writeToRedis(user.id + FORGOT_PASS_EXT, forgotPasswordToken, '15m')
 
             if (!reditsWriteResult) {
                 return {
@@ -322,7 +351,7 @@ export class UserDomainServices {
                     message: 'Invalid token'
                 }
             }
-            const isTokenUsed = await this.userRepositories.checkIsKeyIsExist(tokenResult.userId)
+            const isTokenUsed = await this.userRepositories.checkIsKeyIsExist(tokenResult.userId + FORGOT_PASS_EXT)
             if (isTokenUsed === null) {
                 throw new Error('Error checking token')
             }
@@ -342,7 +371,7 @@ export class UserDomainServices {
                 throw new Error('Error updating user password')
             }
 
-            const removeResult = await this.userRepositories.removeResetPasswordToken(tokenResult.userId)
+            const removeResult = await this.userRepositories.removeKey(tokenResult.userId + FORGOT_PASS_EXT)
 
             if (!removeResult) {
                 throw new Error('Error removing reset password token')
