@@ -142,7 +142,7 @@ export class UserService {
 
             if (loginResult.is2FAEnabled) {
                 return {
-                    message: '2FA enabled',
+                    message: 'Created process for 2FA enabled with TOTP',
                     status: HttpStatus.CREATED,
                     twoFAnonce: loginResult.twoFAnonce
                 }
@@ -310,13 +310,14 @@ export class UserService {
     }
 
 
-    async verifyTOTP(email: string, token: string): Promise<{
+    async verifyTOTP(email: string, token: string, nonce: string): Promise<{
         message: string,
         status: HttpStatus
-        qrCodeImageURL?: string
+        token?: string
+        refreshToken?: string
     }> {
         try {
-            const enableTOTPResult = await this.userDomainServices.verifyTOTP(email, token)
+            const enableTOTPResult = await this.userDomainServices.verifyTOTP(email, token, nonce)
 
             if (enableTOTPResult.isInternalError) {
                 return {
@@ -334,6 +335,8 @@ export class UserService {
 
             return {
                 message: enableTOTPResult.message,
+                token: enableTOTPResult.token,
+                refreshToken: enableTOTPResult.refreshToken,
                 status: HttpStatus.OK,
             }
 

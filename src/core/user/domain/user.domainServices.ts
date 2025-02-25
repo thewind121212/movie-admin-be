@@ -515,14 +515,39 @@ export class UserDomainServices {
 
 
 
-    async verifyTOTP(email: string, token: string): Promise<{
+    async verifyTOTP(email: string, token: string, nonce: string): Promise<{
         isError: boolean,
         isInternalError?: boolean,
         message: string
+        token?: string,
+        refreshToken?: string,
     }> {
 
         try {
-            const user = await this.userRepositories.getUser(email)
+            const userGet = await this.userRepositories.getUser(email)
+
+            const [user, cachingLogin] = await Promise.all([
+                this.userRepositories.getUser(email),
+                this.userRepositories.getValueFromRedis(`${userGet?.id}${LOGIN_EXT}`)
+            ])
+
+            if (!cachingLogin) {
+                return {
+                    isError: true,
+                    message: 'Nonce not found',
+                }
+            }
+
+            if (cachingLogin.nonce !== nonce) {
+                return {
+                    isError: true,
+                    message: 'Invalid nonce'
+                }
+            }
+
+            if (!cachingLogin.token || !cachingLogin.refreshToken) {
+                throw new Error('Error getting token')
+            }
 
             if (!user) {
                 return {
@@ -556,6 +581,8 @@ export class UserDomainServices {
             return {
                 isError: false,
                 message: 'Access granted TOTP verified successfully',
+                refreshToken: cachingLogin.refreshToken,
+                token: cachingLogin.token
             }
 
         } catch (error) {

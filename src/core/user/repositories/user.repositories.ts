@@ -160,7 +160,7 @@ export class UserRepositories {
 
     // get value from redis
 
-    async getValueFromRedis(key: string): Promise<string | null> {
+    async getValueFromRedis(key: string): Promise<any | null> {
         try {
             const value = await this.redis.get(key)
             if (!value) {
