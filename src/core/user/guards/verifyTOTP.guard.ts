@@ -7,8 +7,8 @@ import { HttpStatusCode } from 'axios';
 export class verifyTOTPGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const { token, email } = request.body
-        if (!email || !token) {
+        const { token, email, nonce } = request.body
+        if (!email || !token || !nonce) {
             throw new HttpException(
                 {
                     status: 'fail',

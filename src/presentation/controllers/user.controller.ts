@@ -120,7 +120,7 @@ export class UserController {
       return res.status(status).json({ ...response, data: { token, refreshToken } });
     }
     else if (status === HttpStatus.CREATED) {
-      return res.status(status).json({ ...response, data: { nonce: twoFAnonce } });
+      return res.status(status).json({ ...response, data: { nonce: twoFAnonce, isTwoFaEnabled: true } });
     } else {
       return res.status(status).json({ ...response });
     }
@@ -242,15 +242,20 @@ export class UserController {
   @Post('auth/2FA/verifyTOTP')
   @UseGuards(verifyTOTPGuard)
   async verifyTOTP(
-    @Body() body: { token: string, email: string },
+    @Body() body: { token: string, email: string, nonce : string },
     @Response() res: ExpressResponse
   ) {
-    const { status, message } = await this.userService.verifyTOTP(body.email, body.token);
+    const { status, message, token ,refreshToken } = await this.userService.verifyTOTP(body.email, body.token , body.nonce);
     const response: ResponseType = {
       message,
       data: null,
       created_at: new Date()
     }
+
+    if (token && refreshToken) {
+       response.data = { token, refreshToken }
+    }
+
     return res.status(status).json({ ...response });
   }
 
