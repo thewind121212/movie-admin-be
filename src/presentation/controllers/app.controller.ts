@@ -1,7 +1,7 @@
-import { Controller, Get, Response } from '@nestjs/common';
+import { Controller, Get, Header,  Response, Headers } from '@nestjs/common';
 import { AppService } from '../../app.service';
 
-import { Response as ExpressResponse } from 'express';
+import { Response as ExpressResponse} from 'express';
 
 @Controller()
 export class AppController {
@@ -9,9 +9,10 @@ export class AppController {
 
   @Get()
   async ping(
+    @Headers('Authorization') authorization: string,
     @Response() res: ExpressResponse
   ) {
-    this.appService.ping();
-    return res.status(200).json({ message: 'pong' });
+    // this.appService.ping();
+    return res.status(401).json({ message: 'pong' });
   }
 }
