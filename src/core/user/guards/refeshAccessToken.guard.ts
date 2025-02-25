@@ -17,6 +17,7 @@ export class refreshAccessTokenGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest();
 
+        console.log(req.headers)
 
         if (!req.headers.authorization) {
             throw new HttpException(
@@ -28,6 +29,8 @@ export class refreshAccessTokenGuard implements CanActivate {
                 HttpStatusCode.BadRequest
             )
         }
+
+        console.log(req.headers.authorization)
 
 
         const verifyResult = this.userSecurity.verifyJWT(req.headers.authorization)
