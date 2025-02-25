@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import otpauth from 'otpauth'
 import ms from 'ms'
 import qr from 'qrcode'
+import { User } from '@prisma/client';
 
 
 @Injectable()
@@ -160,14 +161,13 @@ export class UserSecurity {
 
     // verify OTP
 
-    public async verifyOTP(email: string, token: string): Promise<{
+    public async verifyOTP(email: string, token: string, user: User): Promise<{
         isInterNalError: boolean,
         isError: boolean,
         message: string,
     }> {
 
         try {
-            const user = await this.userRepositories.getUser(email)
 
             if (!user) {
                 return {
@@ -191,7 +191,7 @@ export class UserSecurity {
                 algorithm: 'SHA256',
                 digits: 6,
                 period: 30,
-                secret: user.totpSecret,
+                secret: user.totpSecret
             })
 
             const isValid = totp.validate({ token, window: 1 })

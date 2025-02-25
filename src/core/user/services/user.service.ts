@@ -263,4 +263,78 @@ export class UserService {
         }
     }
 
+
+
+    async disableTOTP(email: string, password : string): Promise<{
+        message: string,
+        status: HttpStatus
+        qrCodeImageURL?: string
+    }> {
+        try {
+            const enableTOTPResult = await this.userDomainServices.disableTOTP(email, password)
+
+            if (enableTOTPResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (enableTOTPResult.isError) {
+                return {
+                    message: enableTOTPResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+            return {
+                message: enableTOTPResult.message,
+                status: HttpStatus.OK,
+            }
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+
+    async verifyTOTP(email: string, token : string): Promise<{
+        message: string,
+        status: HttpStatus
+        qrCodeImageURL?: string
+    }> {
+        try {
+            const enableTOTPResult = await this.userDomainServices.verifyTOTP(email, token)
+
+            if (enableTOTPResult.isInternalError) {
+                return {
+                    message: 'Internal server error',
+                    status: HttpStatus.INTERNAL_SERVER_ERROR
+                }
+            }
+
+            if (enableTOTPResult.isError) {
+                return {
+                    message: enableTOTPResult.message,
+                    status: HttpStatus.BAD_REQUEST
+                }
+            }
+
+            return {
+                message: enableTOTPResult.message,
+                status: HttpStatus.OK,
+            }
+
+        } catch (error) {
+            return {
+                message: 'Internal server error',
+                status: HttpStatus.INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+
 }

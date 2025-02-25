@@ -5,7 +5,7 @@ import { HttpStatusCode } from 'axios';
 
 
 @Injectable()
-export class enableTOTPGuard implements CanActivate {
+export class toggleTOTPGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
