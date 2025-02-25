@@ -99,7 +99,7 @@ export class UserController {
   ) {
     const credential = body;
 
-    const { status, message, token, refreshToken } = await this.userService.login(credential);
+    const { status, message, token, refreshToken, twoFAnonce } = await this.userService.login(credential);
     const response: ResponseType = {
       message,
       data: null,
@@ -109,8 +109,22 @@ export class UserController {
       response.message = "Internal server error";
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ ...response });
     }
-    response.data = { token, refreshToken };
-    return res.status(status).json({ ...response });
+
+    if (status === HttpStatus.CREATED && !twoFAnonce) {
+      response.message = "Internal server error";
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ ...response });
+    }
+
+
+    if (status === HttpStatus.OK) {
+      return res.status(status).json({ ...response, data: { token, refreshToken } });
+    }
+    else if (status === HttpStatus.CREATED) {
+      return res.status(status).json({ ...response, data: { nonce: twoFAnonce } });
+    } else {
+      return res.status(status).json({ ...response });
+    }
+
   }
 
 

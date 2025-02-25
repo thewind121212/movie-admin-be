@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { RegisterRequestJWTPayloadType } from '../type/User.type';
 import { UserRepositories } from '../repositories/user.repositories';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto'
 import otpauth from 'otpauth'
 import ms from 'ms'
 import qr from 'qrcode'
@@ -220,6 +221,11 @@ export class UserSecurity {
             }
 
         }
+    }
+
+    public  genNonce(): string {
+        const nonce =  crypto.randomBytes(16).toString('base64')
+        return nonce
     }
 
 }
