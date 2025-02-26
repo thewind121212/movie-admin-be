@@ -16,7 +16,6 @@ export class MovieGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
 
-         this.dockerService.runOnHostFFmpeg('http://10.10.0.216:9000/movie-raw/1739442864847-117204406.mp4', 'test-run-onhost2')
 
 
         const request: Request = context.switchToHttp().getRequest();

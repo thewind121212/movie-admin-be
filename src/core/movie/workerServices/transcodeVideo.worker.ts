@@ -24,7 +24,20 @@ export class VideoTranscodingProcessor {
 
     console.log(`Transcoding video from ${videoPath} begins...`);
 
-    await this.dockerServices.runFFmpegDocker(videoPath, videoName);
+    if (!process.env.TRANSCODE_ENV) {
+      console.log('Transcoding environment not set');
+      return { success: false, message: 'Transcoding environment not set' };
+    }
+
+    if (process.env.TRANSCODE_ENV === 'docker') {
+      await this.dockerServices.runFFmpegDocker(videoPath, videoName);
+    }
+
+    if (process.env.TRANSCODE_ENV === 'host') {
+      await this.dockerServices.runOnHostFFmpeg('http://10.10.0.216:9000/movie-raw/1739442864847-117204406.mp4', 'test-run-onhost2')
+
+    }
+
     this.s3Service.removePathFromS3('movie-raw', videoPath.split('/').pop() as string);
     return { success: true, message: 'Video transcoding completed!' };
   }
