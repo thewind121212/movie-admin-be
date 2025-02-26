@@ -34,7 +34,7 @@ export class VideoTranscodingProcessor {
     }
 
     if (process.env.TRANSCODE_ENV === 'host') {
-      await this.dockerServices.runOnHostFFmpeg('http://10.10.0.216:9000/movie-raw/1739442864847-117204406.mp4', 'test-run-onhost2')
+      await this.dockerServices.runOnHostFFmpeg(videoPath, videoName);
 
     }
 
