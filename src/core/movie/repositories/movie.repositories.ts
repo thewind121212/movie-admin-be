@@ -113,6 +113,7 @@ export class MovieRepository {
             return createResult
 
         } catch (error) {
+            console.log("Internal Error", error)
             return {
                 isError: true,
                 message: error.message
