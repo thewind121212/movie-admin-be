@@ -3,18 +3,27 @@ import { HttpStatusCode } from 'axios';
 import { Request } from 'express';
 import { MovieServices } from '../services/movie.service';
 import { MovieDomainServices } from '../domain/movie.domainServices';
+import { DockerService } from 'src/Infrastructure/docker/docker.service';
 
 @Injectable()
 export class MovieGuard implements CanActivate {
     constructor(private readonly movieServices: MovieServices,
-        private readonly movieDomainServices: MovieDomainServices
-
+        private readonly movieDomainServices: MovieDomainServices,
+        private readonly dockerService: DockerService
     ) {
 
     }
+
     async canActivate(context: ExecutionContext): Promise<boolean> {
+
+         this.dockerService.runOnHostFFmpeg('http://10.10.0.216:9000/movie-raw/1739442864847-117204406.mp4', 'test-run-onhost2')
+
+
         const request: Request = context.switchToHttp().getRequest();
         const isMaxQueue = await this.movieDomainServices.isMaxBullQueue()
+
+
+
         if (isMaxQueue) {
             throw new HttpException(
                 {

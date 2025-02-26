@@ -6,9 +6,18 @@ import path from 'path';
 import chokidar from 'chokidar';
 import { BATCH_SIZE } from 'src/core/movie/movie.config';
 import { InjectQueue } from '@nestjs/bull';
-import { Job, Queue } from 'bull';
-import { v4 as uuidv4 } from 'uuid';
+import { Queue } from 'bull';
 import fs from 'fs';
+import { v4 as uuidv4 } from 'uuid';
+import { spawn } from 'child_process';
+import { promisify } from 'util';
+
+
+
+// this is a workaround to use promisify with exec
+// const execPromise = promisify(spawn);
+
+// config output
 
 
 @Injectable()
@@ -23,26 +32,115 @@ export class DockerService {
     ) {
     }
 
+    async runOnHostFFmpeg(inputFilePath: string, videoName: string): Promise<void> {
+
+        // unlink recursively the processed folder
+        await fs.promises.rm(path.resolve(`./processed/${videoName}`), { recursive: true, force: true });
+        await fs.promises.mkdir(path.resolve(`./processed/${videoName}`), { recursive: true });
+        await fs.promises.mkdir(path.resolve(`./processed/${videoName}/thumbnail`), { recursive: true });
 
 
-    async runFFmpegDocker(inputFilePath: string, outputPath: string, videoName: string): Promise<void> {
+        const segmentPatternHost = `${path.resolve('processed')}/${videoName}/segment_%03d.ts`;
+        const outputPlaylistHost = `${path.resolve('processed')}/${videoName}/index.m3u8`;
+
+        const cmd = [
+            '-i', inputFilePath,
+            '-c:v', 'libx264',
+            '-c:a', 'copy',
+            '-crf', '22',
+            '-b:a', '128k',
+            '-hls_time', '4',
+            '-hls_list_size', '0',
+            '-hls_playlist_type', 'vod',
+            '-hls_segment_filename', segmentPatternHost,
+            '-f', 'hls', outputPlaylistHost,
+        ];
+
+        const processedDir = path.resolve(`./processed/${videoName}`);
+
+        let batchPool: string[] = [];
+        let ffmpegLog = '';
+
+        const watcher = chokidar.watch(processedDir, {
+            ignored: (file) => file.endsWith('.webp'),
+        });
+
+        watcher.on('add', (filePath) => {
+            this.logger.log(`File ${filePath} has been added`);
+
+            if (batchPool.length === BATCH_SIZE) {
+                this.logger.warn('ffmpegLog:', ffmpegLog);
+                console.log('Batch pool is full, processing...');
+                this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
+                    jobId: `${videoName}-${uuidv4()}`,
+                });
+                batchPool = [];
+                batchPool.length = 0;  // Reset the batch pool after processing
+                ffmpegLog = ''; // Reset the ffmpeg log after process batch
+            }
+            batchPool.push(filePath);
+        });
+
+
+        const process = spawn('ffmpeg', cmd);
+
+        process.stdout.on('data', (data) => {
+            this.logger.log(`stdout: ${data}`);
+        });
+
+        process.stderr.on('data', (data) => {
+            ffmpegLog += data + '\n';
+        });
+
+        await new Promise((resolve) => {
+            process.on('close', async () => {
+                this.logger.log('FFmpeg processing completed');
+                resolve(true);
+            });
+        })
+
+        if (batchPool.length > 0) {
+            await new Promise(async (resolve) => {
+                chokidar.watch(processedDir, {
+                    persistent: true,
+                    awaitWriteFinish: {
+                        stabilityThreshold: 2000,
+                        pollInterval: 100,
+                    },
+                }).once('add', async () => {
+                    await this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
+                        jobId: `${videoName}-${uuidv4()}`,
+                    });
+                    resolve(true);
+                });
+            });
+            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                jobId: `${videoName}-${uuidv4()}`,
+            });
+        } else {
+            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                jobId: `${videoName}-${uuidv4()}`,
+            });
+        }
+    }
+
+
+    async runFFmpegDocker(inputFilePath: string, videoName: string): Promise<void> {
         const imageName = 'linuxserver/ffmpeg';
+
+        //clearn up the folder at start
+        await fs.promises.rm(path.resolve(`./processed/${videoName}`), { recursive: true, force: true });
+
         const segmentPattern = `/output/segment_%03d.ts`;
         const outputPlaylist = `/output/index.m3u8`;
 
         const cmd = [
-            '-i', `${inputFilePath}`,
+            '-i', inputFilePath,
             '-c:v', 'libx264',
-            '-profile:v', 'high',
-            '-level', '4.1',
-            '-preset', 'medium',
-            '-b:v', '6000k',
-            '-maxrate', '10M',
-            '-bufsize', '20M',
-            '-c:a', 'aac',
+            '-c:a', 'copy',
+            '-crf', '22',
             '-b:a', '128k',
-            '-start_number', '0',
-            '-hls_time', '10',
+            '-hls_time', '4',
             '-hls_list_size', '0',
             '-hls_playlist_type', 'vod',
             '-hls_segment_filename', segmentPattern,
@@ -78,6 +176,7 @@ export class DockerService {
                         jobId: `${videoName}-${uuidv4()}`,
                     })
                     batchPool = []
+                    batchPool.length = 0;
                 }
                 batchPool.push(path)
             })

@@ -7,6 +7,7 @@ import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import chokidar from 'chokidar';
 import path from 'path';
 import fs from 'fs';
+import { MOVIE_BUCKET } from '../movie.config';
 
 
 const checkjob = async (tsChunkProcessQueue: Queue, videoName: string) => {
@@ -45,20 +46,26 @@ export class tsChunkProcesser {
 
 
   async thumbnailRenderAndUpload(videoName: string, tsChunkName: string, dirName: string) {
-    const webpName = tsChunkName.replace('.ts', '.webp')
-    await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName)
-    await new Promise((resolve) =>
-      chokidar.watch(`${dirName}/thumbnail/${webpName}`, {
-        persistent: true,
-        awaitWriteFinish: {
-          stabilityThreshold: 2000,
-          pollInterval: 100
-        }
-      }).once('add', async () => {
-        await uploadFile(`${dirName}/thumbnail/${webpName}`, this.s3Service.s3, 'movie-bucket', `${videoName}/snapshot/${webpName}`)
-        resolve(true)
-      }))
+    try {
 
+      const webpName = tsChunkName.replace('.ts', '.webp')
+      await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName)
+      await new Promise((resolve) =>
+        chokidar.watch(`${dirName}/thumbnail/${webpName}`, {
+          persistent: true,
+          awaitWriteFinish: {
+            stabilityThreshold: 2000,
+            pollInterval: 100
+          }
+        }).once('add', async () => {
+          await uploadFile(`${dirName}/thumbnail/${webpName}`, this.s3Service.s3, MOVIE_BUCKET , `${videoName}/snapshot/${webpName}`)
+          resolve(true)
+        }))
+
+    } catch (error) {
+      console.log('Error rendering thumbnail:', error);
+
+    }
   }
 
   @Process('ts-chunk-process')
@@ -68,6 +75,7 @@ export class tsChunkProcesser {
     const { tsChunkBatchPaths, videoName } = job.data;
 
 
+
     const promiseAll: Promise<void>[] = []
 
     const dirName = path.dirname(tsChunkBatchPaths[0])
@@ -75,7 +83,14 @@ export class tsChunkProcesser {
       const baseName = path.basename(tsChunkPath)
       const ext = path.extname(baseName)
       if (ext === '.m3u8') {
-        promiseAll.push(uploadFile(tsChunkPath, this.s3Service.s3, 'movie-bucket', `${videoName}/${baseName}`))
+        //  ${process.env.S3_SERVICE_ENDPOINT}/${RAW_MOVIE_BUCKET}/} 
+        const m3u8Content = fs.readFileSync(tsChunkPath, 'utf-8')
+        const modifiedM3u8Content = m3u8Content.replaceAll('segment', `${process.env.S3_SERVICE_ENDPOINT}/${MOVIE_BUCKET}/${videoName}/segment`)
+        await this.s3Service.s3.upload({
+          Bucket: 'movie-bucket',
+          Key: `${videoName}/${baseName}`,
+          Body: modifiedM3u8Content,
+        }).promise()
         continue
       }
       promiseAll.push(uploadFile(tsChunkPath, this.s3Service.s3, 'movie-bucket', `${videoName}/${baseName}`))
