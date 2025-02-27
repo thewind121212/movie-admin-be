@@ -9,6 +9,18 @@ import path from 'path';
 import fs from 'fs';
 import { MOVIE_BUCKET } from '../movie.config';
 
+export const checkQueueFinished = async (tsChunkProcessQueue: Queue, videoName: string): Promise<boolean> => {
+  const jobs: Job[] = await tsChunkProcessQueue.getJobs(['waiting', 'active']);
+  const isStillHaveJob = jobs.some(job => job.id?.toString().startsWith(videoName + '-'));
+  if (isStillHaveJob) {
+    console.log('Quue is not finished yet');
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+    return await checkQueueFinished(tsChunkProcessQueue, videoName)
+  } else {
+    return true
+  }
+}
+
 
 const checkjob = async (tsChunkProcessQueue: Queue, videoName: string) => {
   try {
@@ -58,7 +70,7 @@ export class tsChunkProcesser {
             pollInterval: 100
           }
         }).once('add', async () => {
-          await uploadFile(`${dirName}/thumbnail/${webpName}`, this.s3Service.s3, MOVIE_BUCKET , `${videoName}/snapshot/${webpName}`)
+          await uploadFile(`${dirName}/thumbnail/${webpName}`, this.s3Service.s3, MOVIE_BUCKET, `${videoName}/snapshot/${webpName}`)
           resolve(true)
         }))
 
@@ -68,7 +80,10 @@ export class tsChunkProcesser {
     }
   }
 
-  @Process('ts-chunk-process')
+  @Process( {
+    name: 'ts-chunk-process',
+    concurrency: 2
+  })
   async handleVideoTranscoding(
     job: Job<{ tsChunkBatchPaths: string[], videoName: string }>,
   ) {
