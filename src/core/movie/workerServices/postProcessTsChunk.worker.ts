@@ -7,14 +7,14 @@ import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import chokidar from 'chokidar';
 import path from 'path';
 import fs from 'fs';
-import { MOVIE_BUCKET } from '../movie.config';
+import { MOVIE_BUCKET, CALL_BACK_CHECK_INTERVAL } from '../movie.config';
 
 export const checkQueueFinished = async (tsChunkProcessQueue: Queue, videoName: string): Promise<boolean> => {
   const jobs: Job[] = await tsChunkProcessQueue.getJobs(['waiting', 'active']);
   const isStillHaveJob = jobs.some(job => job.id?.toString().startsWith(videoName + '-'));
   if (isStillHaveJob) {
-    console.log('Quue is not finished yet');
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    console.log('Queue is not finished yet', jobs.length);
+    await new Promise((resolve) => setTimeout(resolve, CALL_BACK_CHECK_INTERVAL));
     return await checkQueueFinished(tsChunkProcessQueue, videoName)
   } else {
     return true
@@ -27,10 +27,16 @@ const checkjob = async (tsChunkProcessQueue: Queue, videoName: string) => {
     const jobs: Job[] = await tsChunkProcessQueue.getJobs(['waiting', 'active', 'delayed']);
     const isStillHaveJob = jobs.some(job => job.id?.toString().startsWith(videoName + '-'));
 
+    // If no more jobs in queue, remove the processed directory
     if (!isStillHaveJob) {
       console.log('No more jobs in queue');
       await fs.promises.rm(path.resolve(`processed/${videoName}`), { recursive: true, force: true });
       console.log(`Directory processed/${videoName} removed.`);
+      return {
+        success: true,
+        message: 'Jobs completed cleaning up'
+      }
+      // If there are still jobs in queue, wait for the job to complete
     } else {
       const completedListener = async (job: Job) => {
         if (job.id?.toString().startsWith(videoName + '-')) {
@@ -42,6 +48,10 @@ const checkjob = async (tsChunkProcessQueue: Queue, videoName: string) => {
     }
   } catch (error) {
     console.error(`Error checking jobs for ${videoName}:`, error);
+    return {
+      success: false,
+      message: 'Error checking jobs'
+    }
   }
 };
 
@@ -80,9 +90,8 @@ export class tsChunkProcesser {
     }
   }
 
-  @Process( {
+  @Process({
     name: 'ts-chunk-process',
-    concurrency: 2
   })
   async handleVideoTranscoding(
     job: Job<{ tsChunkBatchPaths: string[], videoName: string }>,
@@ -119,6 +128,6 @@ export class tsChunkProcesser {
   @Process('clean-up-ts-chunk')
   async cleanUpTsChunk(job: Job<{ videoName: string }>) {
     const { videoName } = job.data;
-    checkjob(this.tsChunkProcessQueue, videoName)
+    await checkjob(this.tsChunkProcessQueue, videoName)
   }
 }
