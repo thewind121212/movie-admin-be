@@ -28,10 +28,12 @@ export class VideoTranscodingProcessor {
     }
 
     if (process.env.TRANSCODE_ENV === 'docker') {
+      console.log('Transcoding video using docker');
       await this.dockerServices.runFFmpegDocker(videoPath, videoName);
     }
 
     if (process.env.TRANSCODE_ENV === 'host') {
+      console.log('Transcoding video using host');
       await this.dockerServices.runOnHostFFmpeg(videoPath, videoName);
 
     }
