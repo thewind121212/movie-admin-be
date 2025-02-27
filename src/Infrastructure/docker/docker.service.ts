@@ -10,7 +10,7 @@ import { Queue } from 'bull';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { spawn } from 'child_process';
-import { promisify } from 'util';
+import { checkQueueFinished } from 'src/core/movie/workerServices/postProcessTsChunk.worker';
 
 
 
@@ -29,6 +29,7 @@ export class DockerService {
         @InjectQueue('video-post-process')
         private readonly tsChunkProcessQueue: Queue,
         @Inject('DOCKER') private readonly docker: Docker,
+        @Inject('CHECK_QUEUE_FINISHED') private readonly checkQueue: typeof checkQueueFinished,
     ) {
     }
 
@@ -122,6 +123,14 @@ export class DockerService {
                 jobId: `${videoName}-${uuidv4()}`,
             });
         }
+
+        //wait the bull with movie name to finish
+        const isQueueFinished = await this.checkQueue(this.tsChunkProcessQueue, videoName);
+        if (isQueueFinished) {
+            this.logger.log('Queue finished');
+            return
+        }
+        
     }
 
 
@@ -212,6 +221,13 @@ export class DockerService {
 
 
             this.logger.log(`FFmpeg completed successfully!`);
+            // check if the queue is finished
+            const isQueueFinished = await this.checkQueue(this.tsChunkProcessQueue, videoName);
+            if (isQueueFinished) {
+                this.logger.log('Queue finished');
+                return
+            }
+
         } catch (error) {
             this.logger.error(`Error running FFmpeg in Docker: ${error}`);
             throw error;

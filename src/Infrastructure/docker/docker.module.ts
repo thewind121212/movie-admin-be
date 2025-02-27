@@ -3,7 +3,7 @@ import { DockerService } from './docker.service';
 import { tsChunkProcesser } from 'src/core/movie/workerServices/postProcessTsChunk.worker';
 import Docker from 'dockerode';
 import { BullModule } from '@nestjs/bull';
-import { S3Service } from '../s3/s3.service';
+import { checkQueueFinished } from 'src/core/movie/workerServices/postProcessTsChunk.worker';
 import { S3Module } from '../s3/s3.module';
 
 @Module({
@@ -28,6 +28,10 @@ import { S3Module } from '../s3/s3.module';
     },
     DockerService,
     tsChunkProcesser,
+    {
+      provide: 'CHECK_QUEUE_FINISHED',
+      useValue: checkQueueFinished,
+    },
   ],
   exports: [DockerService],
   
