@@ -20,6 +20,9 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
         port: 6379,
         db: 0,
       },
+      defaultJobOptions: {
+        removeOnFail: true,
+      }
     }),
     S3Module,
   ],

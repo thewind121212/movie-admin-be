@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to NestJS Debug",
+      "address": "localhost",
+      "port": 9220,
+      "restart": true,
+      "protocol": "inspector",
+      "timeout": 10000
+    }
+  ]
+}

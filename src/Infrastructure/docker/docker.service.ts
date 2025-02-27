@@ -46,7 +46,7 @@ export class DockerService {
 
         const cmd = [
             '-i', inputFilePath,
-            '-c:v', 'libx264',
+            '-c:v', 'copy',
             '-c:a', 'copy',
             '-crf', '22',
             '-b:a', '128k',
@@ -96,6 +96,7 @@ export class DockerService {
         await new Promise((resolve) => {
             process.on('close', async () => {
                 this.logger.log('FFmpeg processing completed');
+                watcher.close();
                 resolve(true);
             });
         })
@@ -115,24 +116,19 @@ export class DockerService {
                     resolve(true);
                 });
             });
-            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
-                jobId: `${videoName}-${uuidv4()}`,
-            });
-        } else {
-            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
-                jobId: `${videoName}-${uuidv4()}`,
-            });
         }
 
         //wait the bull with movie name to finish
         const isQueueFinished = await this.checkQueue(this.tsChunkProcessQueue, videoName);
         if (isQueueFinished) {
             this.logger.log('Queue finished');
+            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                jobId: `${'clean-job'}-${uuidv4()}`,
+            });
             //clear the queue
-            this.tsChunkProcessQueue.clean(0, 'completed');
             return
         }
-        
+
     }
 
 
