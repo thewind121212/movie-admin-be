@@ -128,6 +128,8 @@ export class DockerService {
         const isQueueFinished = await this.checkQueue(this.tsChunkProcessQueue, videoName);
         if (isQueueFinished) {
             this.logger.log('Queue finished');
+            //clear the queue
+            this.tsChunkProcessQueue.clean(0, 'completed');
             return
         }
         
@@ -230,6 +232,7 @@ export class DockerService {
 
         } catch (error) {
             this.logger.error(`Error running FFmpeg in Docker: ${error}`);
+            this.tsChunkProcessQueue.clean(0, 'completed');
             throw error;
         }
     }
