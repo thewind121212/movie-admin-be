@@ -35,7 +35,6 @@ export class VideoTranscodingProcessor {
     if (process.env.TRANSCODE_ENV === 'host') {
       console.log('Transcoding video using host');
       await this.dockerServices.runOnHostFFmpeg(videoPath, videoName);
-
     }
 
     this.s3Service.removePathFromS3('movie-raw', videoPath.split('/').pop() as string);

@@ -67,38 +67,53 @@ export class tsChunkProcesser {
 
 
 
-  async thumbnailRenderAndUpload(videoName: string, tsChunkName: string, dirName: string) {
+  async thumbnailRender(videoName: string, tsChunkName: string, dirName: string) {
     try {
 
       const webpName = tsChunkName.replace('.ts', '.webp')
-      await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName)
-      await new Promise((resolve) =>
-        chokidar.watch(`${dirName}/thumbnail/${webpName}`, {
-          persistent: true,
-          awaitWriteFinish: {
-            stabilityThreshold: 2000,
-            pollInterval: 100
-          }
-        }).once('add', async () => {
-          await uploadFile(`${dirName}/thumbnail/${webpName}`, this.s3Service.s3, MOVIE_BUCKET, `${videoName}/snapshot/${webpName}`)
-          resolve(true)
-        }))
-
+      await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName,)
     } catch (error) {
       console.log('Error rendering thumbnail:', error);
 
     }
   }
 
+
+  @Process('upload-snapshot')
+  async uploadSnapShot(job: Job<{ snapShotPaths: string[], videoName: string }>) {
+    const { videoName } = job.data;
+    const uploadPromises: Promise<void>[] = [];
+
+    console.log('Uploading snapshot to s3...');
+    const concurrencyLimit = 10;
+    let currentIndex = 0;
+
+    while (currentIndex < job.data.snapShotPaths.length) {
+      const batch = job.data.snapShotPaths.slice(currentIndex, currentIndex + concurrencyLimit);
+
+      batch.forEach((file) => {
+        const fullFilePath = path.resolve(file);
+        const webpName = path.basename(file);
+        uploadPromises.push(uploadFile(fullFilePath, this.s3Service.s3, 'movie-bucket', `${videoName}/snapshot/${webpName}`));
+      });
+
+      await Promise.all(uploadPromises);
+      currentIndex += concurrencyLimit;
+    }
+
+    console.log('All snapshot uploaded.');
+    return { success: true, message: 'Snapshot upload completed!' };
+
+  }
+
+
   @Process({
     name: 'ts-chunk-process',
   })
   async handleVideoTranscoding(
-    job: Job<{ tsChunkBatchPaths: string[], videoName: string }>,
+    job: Job<{ tsChunkBatchPaths: string[], videoName: string, batchType: 'normal' | 'rest' }>,
   ) {
     const { tsChunkBatchPaths, videoName } = job.data;
-
-
 
     const promiseAll: Promise<void>[] = []
 
@@ -107,7 +122,6 @@ export class tsChunkProcesser {
       const baseName = path.basename(tsChunkPath)
       const ext = path.extname(baseName)
       if (ext === '.m3u8') {
-        //  ${process.env.S3_SERVICE_ENDPOINT}/${RAW_MOVIE_BUCKET}/} 
         const m3u8Content = fs.readFileSync(tsChunkPath, 'utf-8')
         const modifiedM3u8Content = m3u8Content.replaceAll('segment', `${process.env.S3_SERVICE_ENDPOINT}/${MOVIE_BUCKET}/${videoName}/segment`)
         await this.s3Service.s3.upload({
@@ -115,10 +129,19 @@ export class tsChunkProcesser {
           Key: `${videoName}/${baseName}`,
           Body: modifiedM3u8Content,
         }).promise()
-        continue
+        console.log('M3u8 file uploaded completed')
+      } else {
+        chokidar.watch(tsChunkPath, {
+          persistent: true,
+          awaitWriteFinish: {
+            stabilityThreshold: 3000,
+            pollInterval: 150
+          }
+        }).once('add', async () => {
+          promiseAll.push(uploadFile(tsChunkPath, this.s3Service.s3, 'movie-bucket', `${videoName}/${baseName}`))
+          promiseAll.push(this.thumbnailRender(videoName, baseName, dirName))
+        })
       }
-      promiseAll.push(uploadFile(tsChunkPath, this.s3Service.s3, 'movie-bucket', `${videoName}/${baseName}`))
-      promiseAll.push(this.thumbnailRenderAndUpload(videoName, baseName, dirName))
     }
 
     await Promise.all(promiseAll)
