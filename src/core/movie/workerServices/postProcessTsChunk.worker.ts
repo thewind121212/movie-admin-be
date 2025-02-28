@@ -68,16 +68,12 @@ export class tsChunkProcesser {
 
 
 
-  async thumbnailRender(videoName: string, tsChunkName: string, dirName: string) {
-    try {
-
-      const webpName = tsChunkName.replace('.ts', '.webp')
-      await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName,)
-      await new Promise((resolve) => setTimeout(() => resolve(true), TS_CHUNK_SNAPSHOT_DELAY))
-    } catch (error) {
-      console.log('Error rendering thumbnail:', error);
-
-    }
+  @Process('gen-snapshot')
+  async thumbnailRender(job: Job<{ videoName: string, tsChunkName: string, dirName: string }>) {
+    const { videoName, tsChunkName, dirName } = job.data;
+    const webpName = tsChunkName.replace('.ts', '.webp')
+    await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName,)
+    await new Promise((resolve) => setTimeout(() => resolve(true), TS_CHUNK_SNAPSHOT_DELAY))
   }
 
 
@@ -131,7 +127,6 @@ export class tsChunkProcesser {
           Key: `${videoName}/${baseName}`,
           Body: modifiedM3u8Content,
         }).promise()
-        console.log('M3u8 file uploaded completed')
       } else {
         chokidar.watch(tsChunkPath, {
           persistent: true,
@@ -141,7 +136,9 @@ export class tsChunkProcesser {
           }
         }).once('add', async () => {
           promiseAll.push(uploadFile(tsChunkPath, this.s3Service.s3, 'movie-bucket', `${videoName}/${baseName}`))
-          promiseAll.push(this.thumbnailRender(videoName, baseName, dirName))
+          this.tsChunkProcessQueue.add('gen-snapshot', { videoName, tsChunkName: baseName, dirName }, {
+            jobId: `${videoName}-${baseName}-snapshot`
+          })
         })
       }
     }
