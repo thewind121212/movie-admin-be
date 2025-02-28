@@ -2,7 +2,9 @@ FROM ubuntu:latest
 
 # Install dependencies
 RUN apt-get update && \
-    apt-get install -y ffmpeg
+    apt-get install -y ffmpeg && \
+    apt-get install -y pgrep && \
+    apt-get clean
 
 # Create a non-privileged user (recommended for security)
 RUN useradd -ms /bin/bash appuser

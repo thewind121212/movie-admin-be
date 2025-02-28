@@ -9,15 +9,17 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { spawn } from 'child_process';
+import { spawn, exec } from 'child_process';
 import { checkQueueFinished } from 'src/core/movie/workerServices/postProcessTsChunk.worker';
-import { S3Service } from '../s3/s3.service';
-import { clear } from 'console';
+import { CONCURRENT_TS_CHUNK_PROCESS, FFMPEG_PROCESS_INTERVAL } from 'src/core/movie/movie.config';
+import { promisify } from 'util';
+import cliProgress from 'cli-progress';
+import chalk from 'chalk';
 
 
 
 // this is a workaround to use promisify with exec
-// const execPromise = promisify(spawn);
+const execPromise = promisify(exec);
 
 // config output
 
@@ -50,7 +52,7 @@ export class DockerService {
         const cmd = [
             '-i', inputFilePath,
             '-c:v', 'copy',
-            '-c:a', 'aac', '-b:a', '128k',
+            '-c:a', 'aac',
             '-crf', '22',
             '-b:a', '128k',
             '-hls_time', '4',
@@ -82,17 +84,14 @@ export class DockerService {
 
 
         watcher.on('add', (filePath) => {
-            this.logger.log(`File ${filePath} has been added`);
             tsChunkCount++;
             if (batchPool.length === BATCH_SIZE) {
-                // this.logger.warn('ffmpegLog:', ffmpegLog);
-                console.log('Batch pool is full, processing...');
                 this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName, batchType: 'normal' }, {
                     jobId: `${videoName}-${uuidv4()}`,
                 });
                 batchPool = [];
-                batchPool.length = 0;  // Reset the batch pool after processing
-                ffmpegLog = ''; // Reset the ffmpeg log after process batch
+                batchPool.length = 0;  
+                ffmpegLog = ''; 
             }
             batchPool.push(filePath);
         });
@@ -143,11 +142,22 @@ export class DockerService {
         }
 
 
+        const progressBar = new cliProgress.SingleBar({
+            format: `Progress snapshot segment | ${chalk.blue('{bar}')} | {percentage}%`,
+            barCompleteChar: '█',
+            barIncompleteChar: '░',
+            hideCursor: true
+        }, cliProgress.Presets.rect);
+
+        progressBar.start(tsChunkCount, thumbnails.length);
+
         await new Promise((resolve) => {
             const interval = setInterval(() => {
-                this.logger.log('Thumbnail Rendered: ' + `${(thumbnails.length / tsChunkCount * 100).toFixed(2)} ` + '%');
+                progressBar.update(thumbnails.length);
                 if (thumbnails.length === tsChunkCount - 1) {
-                    this.logger.log('Snapshot count is equal to ts chunk count');
+                    progressBar.update(tsChunkCount);
+                    this.logger.log('All snapshot has been processed');
+                    progressBar.stop();
                     clearInterval(interval);
                     resolve(true);
                 }
@@ -357,7 +367,34 @@ export class DockerService {
 
     }
 
+    async getFFmpegProcessCount(containerName) {
+        try {
+            const { stdout } = await execPromise(`docker exec ${containerName} pgrep -c ffmpeg`);
+            return parseInt(stdout.trim(), 10);
+        } catch (error) {
+            if (error.stderr.includes("pgrep: process not found") || error.code === 1) {
+                return 0; // No FFmpeg process running
+            }
+            console.error("Error checking FFmpeg process count:", error);
+            return 0; // Default to 0 in case of unexpected errors
+        }
+    }
+
+    async waitForAvailableSlot(containerName : string, maxProcesses : number, interval = 2000) {
+        while (true) {
+            const pidProcessing = await this.getFFmpegProcessCount(containerName);
+            if (pidProcessing < maxProcesses) {
+                return; 
+            }
+            this.logger.error(`FFmpeg process is full (${pidProcessing}/${maxProcesses}), waiting for the next interval`);
+            await new Promise(resolve => setTimeout(resolve, interval)); 
+        }
+    }
+
+
+
     async renderTSchunkThumnail(videoName: string, tsChunkName: string): Promise<void> {
+
         const container = this.docker.getContainer('ffmpeg-container')
         const cmd = [
             "ffmpeg",
@@ -368,6 +405,9 @@ export class DockerService {
             "-q:v", "50",
             `/output/${videoName}/thumbnail/${tsChunkName.replace('.ts', '')}.webp`
         ]
+
+
+        await this.waitForAvailableSlot('ffmpeg-container', CONCURRENT_TS_CHUNK_PROCESS, FFMPEG_PROCESS_INTERVAL);
 
 
         const exec = await container.exec({
