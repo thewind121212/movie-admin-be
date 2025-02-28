@@ -1,0 +1,23 @@
+PORT=8080
+
+AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_KEY
+AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET
+END_POINT=http://127.0.0.1
+S3_SERVICE_ENDPOINT=http://example.com
+
+DATABASE_URL="postgres://username:password@host:port/database"
+
+TRANSCODE_ENV='production'
+
+# Email Configuration
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your_email@example.com
+SMTP_PASS=your_secure_password
+
+# JWT Secret
+JWT_SECRET=your_jwt_secret
+JWT_REFRESH_SECRET=your_jwt_refresh_secret
+
+# URL
+FRONTEND_URL=http://yourfrontend.com
