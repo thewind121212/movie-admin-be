@@ -70,24 +70,12 @@ services:
       context: .
       dockerfile: ./ffmpeg.Dockerfile
     container_name: ffmpeg-container
+    mem_limit: 4g
     volumes:
       - ./processed:/output:rw
     networks:
       - movie-network-service
 
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin4_container
-    ports:
-      - '5050:80'
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: root
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    depends_on:
-      - postgres
-    networks:
-      - movie-network-service
 
   mailpit:
     image: axllent/mailpit

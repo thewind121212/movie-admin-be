@@ -50,7 +50,7 @@ export class DockerService {
         const cmd = [
             '-i', inputFilePath,
             '-c:v', 'copy',
-            '-c:a', 'copy',
+            '-c:a', 'aac', '-b:a', '128k',
             '-crf', '22',
             '-b:a', '128k',
             '-hls_time', '4',
@@ -145,7 +145,7 @@ export class DockerService {
 
         await new Promise((resolve) => {
             const interval = setInterval(() => {
-                this.logger.log('check the snapshot count with ts chunk count');
+                this.logger.log('Thumbnail Rendered: ' + `${(thumbnails.length / tsChunkCount * 100).toFixed(2)} ` + '%');
                 if (thumbnails.length === tsChunkCount - 1) {
                     this.logger.log('Snapshot count is equal to ts chunk count');
                     clearInterval(interval);
@@ -163,7 +163,7 @@ export class DockerService {
         const isQueueFinished = await this.checkQueue(this.tsChunkProcessQueue, videoName);
         if (isQueueFinished) {
             this.logger.log('Queue finished');
-            await new Promise((resolve) => { setTimeout(() => { resolve(true) }, 5000) });
+            await new Promise((resolve) => { setTimeout(() => { resolve(true) }, 3000) });
             watcher.close().then(() => {
                 this.logger.log(`Watcher folder ${path.resolve(`./processed/${videoName}`)} closed`);
             })
@@ -176,9 +176,9 @@ export class DockerService {
             thumbnails = [];
             thumbnails.length = 0;
             tsChunkCount = 0;
-            // this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
-            //     jobId: `${videoName}-${uuidv4()}`,
-            // })
+            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                jobId: `${videoName}-${uuidv4()}`,
+            })
 
             return
         }

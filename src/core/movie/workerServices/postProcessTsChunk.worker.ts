@@ -7,7 +7,7 @@ import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import chokidar from 'chokidar';
 import path from 'path';
 import fs from 'fs';
-import { MOVIE_BUCKET, CALL_BACK_CHECK_INTERVAL } from '../movie.config';
+import { MOVIE_BUCKET, CALL_BACK_CHECK_INTERVAL, POST_PROCESSING_DELAY, TS_CHUNK_SNAPSHOT_DELAY } from '../movie.config';
 
 export const checkQueueFinished = async (tsChunkProcessQueue: Queue, videoName: string): Promise<boolean> => {
   const jobs: Job[] = await tsChunkProcessQueue.getJobs(['waiting', 'active']);
@@ -32,6 +32,7 @@ const checkjob = async (tsChunkProcessQueue: Queue, videoName: string) => {
       console.log('No more jobs in queue');
       await fs.promises.rm(path.resolve(`processed/${videoName}`), { recursive: true, force: true });
       console.log(`Directory processed/${videoName} removed.`);
+      tsChunkProcessQueue.clean(0, 'completed')
       return {
         success: true,
         message: 'Jobs completed cleaning up'
@@ -72,6 +73,7 @@ export class tsChunkProcesser {
 
       const webpName = tsChunkName.replace('.ts', '.webp')
       await this.dockerServices.renderTSchunkThumnail(videoName, tsChunkName,)
+      await new Promise((resolve) => setTimeout(() => resolve(true), TS_CHUNK_SNAPSHOT_DELAY))
     } catch (error) {
       console.log('Error rendering thumbnail:', error);
 
@@ -145,6 +147,7 @@ export class tsChunkProcesser {
     }
 
     await Promise.all(promiseAll)
+    await new Promise((resolve) => setTimeout(() => resolve(true), POST_PROCESSING_DELAY))
     return { success: true, message: 'Video transcoding completed!' };
   }
 
