@@ -1,7 +1,6 @@
 
 
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
-import { HttpStatusCode } from 'axios';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { tokenName } from '../user.config';
 
 
@@ -18,7 +17,7 @@ export class SubmitForgotPassGuard implements CanActivate {
                     data: null,
                     message: 'Token is required'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.UNAUTHORIZED
             )
         }
 
@@ -30,7 +29,7 @@ export class SubmitForgotPassGuard implements CanActivate {
                     data: null,
                     message: 'Invalid request missing required fields'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
 

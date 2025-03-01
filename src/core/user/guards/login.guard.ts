@@ -1,6 +1,5 @@
 
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
-import { HttpStatusCode } from 'axios';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 
 
 @Injectable()
@@ -16,7 +15,7 @@ export class LoginGuard implements CanActivate {
                     data: null,
                     message: 'Invalid request missing required fields'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
 

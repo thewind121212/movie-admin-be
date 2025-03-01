@@ -1,5 +1,4 @@
-import { HttpException, Injectable, NestMiddleware } from '@nestjs/common';
-import { HttpStatusCode } from 'axios';
+import { HttpException, HttpStatus, Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { UserSecurity } from 'src/core/user/security/user.security';
 
@@ -21,7 +20,7 @@ export class AuthMiddleware implements NestMiddleware {
           data: null,
           message: 'Invalid request missing required fields'
         },
-        HttpStatusCode.BadRequest
+        HttpStatus.BAD_REQUEST
       )
     }
 
@@ -36,7 +35,7 @@ export class AuthMiddleware implements NestMiddleware {
           data: null,
           message: verifyResult.message
         },
-        HttpStatusCode.Unauthorized
+        HttpStatus.UNAUTHORIZED
       )
     }
 
@@ -55,7 +54,7 @@ export class AuthMiddleware implements NestMiddleware {
           data: null,
           message: 'Token is expired, please login again'
         },
-        HttpStatusCode.Unauthorized
+        HttpStatus.UNAUTHORIZED
       )
     }
 

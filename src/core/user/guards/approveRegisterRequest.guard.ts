@@ -1,6 +1,5 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { RegisterRequest } from '../domain/user.entity';
-import { HttpStatusCode } from 'axios';
 import { UserRepositories } from 'src/core/user/repositories/user.repositories';
 import { RegistrationRequests, User } from '@prisma/client'
 
@@ -29,7 +28,7 @@ export class ApproveRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'Invalid email'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
         try {
@@ -45,7 +44,7 @@ export class ApproveRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'Internal server error'
                 },
-                HttpStatusCode.InternalServerError
+                HttpStatus.INTERNAL_SERVER_ERROR
             )
         }
 
@@ -56,7 +55,7 @@ export class ApproveRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'User already exist'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
 
@@ -67,7 +66,7 @@ export class ApproveRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'Register request not found'
                 },
-                HttpStatusCode.NotFound
+                HttpStatus.BAD_REQUEST
             )
         }
 

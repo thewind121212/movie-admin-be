@@ -1,7 +1,6 @@
 
 
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
-import { HttpStatusCode } from 'axios';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { UserSecurity } from '../security/user.security';
 import { UserRepositories } from '../repositories/user.repositories';
 import { FORGOT_PASS_EXT, tokenName } from '../user.config';
@@ -28,7 +27,7 @@ export class VerifyResetLinkGuard implements CanActivate {
                     data: null,
                     message: 'Token not found'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.UNAUTHORIZED
             )
         }
 
@@ -41,7 +40,7 @@ export class VerifyResetLinkGuard implements CanActivate {
                     data: null,
                     message: tokenResult.message
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.UNAUTHORIZED
             )
         }
 
@@ -56,7 +55,7 @@ export class VerifyResetLinkGuard implements CanActivate {
                     data: null,
                     message: 'Internal server error'
                 },
-                HttpStatusCode.InternalServerError
+                HttpStatus.INTERNAL_SERVER_ERROR
             )
         }
 
@@ -68,7 +67,7 @@ export class VerifyResetLinkGuard implements CanActivate {
                     data: null,
                     message: 'Your used this link or it expired please try again!'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.FORBIDDEN
             )
         }
 
