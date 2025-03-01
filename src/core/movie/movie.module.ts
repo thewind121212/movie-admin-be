@@ -22,11 +22,19 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
       },
       defaultJobOptions: {
         removeOnFail: true,
-      }
+      },
     }),
     S3Module,
   ],
   controllers: [MovieController],
-  providers: [MovieServices, VideoTranscodingProcessor, RedisService, MovieRepository, MovieGuard, PrismaService, MovieDomainServices],
+  providers: [
+    MovieServices,
+    VideoTranscodingProcessor,
+    RedisService,
+    MovieRepository,
+    MovieGuard,
+    PrismaService,
+    MovieDomainServices,
+  ],
 })
-export class MovieModule { }
+export class MovieModule {}

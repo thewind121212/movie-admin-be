@@ -10,54 +10,56 @@ import { InjectQueue } from '@nestjs/bull';
 export class MovieServices {
   constructor(
     @InjectQueue('video-transform')
+    // eslint-disable-next-line no-unused-vars
     private readonly videoEncodingQueue: Queue,
+    // eslint-disable-next-line no-unused-vars
     private readonly movieRepository: MovieRepository,
-    private readonly movieDomainServices: MovieDomainServices
-  ) { }
+    // eslint-disable-next-line no-unused-vars
+    private readonly movieDomainServices: MovieDomainServices,
+  ) {}
 
   async uploadMovie(
     inputFilePath: string,
     outputPath: string,
     uploadTicket: string,
   ): Promise<{
-    message: string,
-    status: HttpStatus
+    message: string;
+    status: HttpStatus;
   }> {
+    const ticketData = await this.movieRepository.getTicketData(uploadTicket);
 
-    const ticketData = await this.movieRepository.getTicketData(uploadTicket)
+    if (!ticketData)
+      return {
+        message: 'Invalid upload ticket',
+        status: HttpStatus.BAD_REQUEST,
+      };
 
-    if (!ticketData) return {
-      message: 'Invalid upload ticket',
-      status: HttpStatus.BAD_REQUEST
-    }
-
-
-
-    const resultWriteMovieRepository = await this.movieRepository.writeUploadMovieMetaData(ticketData, inputFilePath)
+    const resultWriteMovieRepository =
+      await this.movieRepository.writeUploadMovieMetaData(
+        ticketData,
+        inputFilePath,
+      );
 
     if (!('id' in resultWriteMovieRepository)) {
       return {
         message: 'Failed to upload movie',
-        status: HttpStatus.INTERNAL_SERVER_ERROR
-      }
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
     }
 
-    const movieEntity = new Movie(
-      {
-        name: ticketData.name,
-        description: ticketData.desc,
-        releaseYear: ticketData.releaseYear,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        dislikes: resultWriteMovieRepository.dislikes,
-        likes: resultWriteMovieRepository.likes,
-        views: resultWriteMovieRepository.views,
-        isPublished: resultWriteMovieRepository.isPublished,
-        status: 'UPLOADED',
-        id: resultWriteMovieRepository.id
-      }
-    )
-
+    const movieEntity = new Movie({
+      name: ticketData.name,
+      description: ticketData.desc,
+      releaseYear: ticketData.releaseYear,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      dislikes: resultWriteMovieRepository.dislikes,
+      likes: resultWriteMovieRepository.likes,
+      views: resultWriteMovieRepository.views,
+      isPublished: resultWriteMovieRepository.isPublished,
+      status: 'UPLOADED',
+      id: resultWriteMovieRepository.id,
+    });
 
     void this.videoEncodingQueue.add('video-transcoding', {
       videoPath: inputFilePath,
@@ -66,38 +68,39 @@ export class MovieServices {
     });
     return {
       message: 'Movie is being processed',
-      status: HttpStatus.CREATED
-    }
+      status: HttpStatus.CREATED,
+    };
   }
 
   async uploadTicketValidator(uploadTicket: string): Promise<{
-    isValid: boolean,
-    message?: string,
-    status?: HttpStatus,
+    isValid: boolean;
+    message?: string;
+    status?: HttpStatus;
   }> {
-    const isMaxQueue = await this.movieDomainServices.isMaxBullQueue()
+    const isMaxQueue = await this.movieDomainServices.isMaxBullQueue();
     if (isMaxQueue) {
       return {
         message: 'Too many movies being processed. Please try again later',
         isValid: false,
-        status: HttpStatus.TOO_MANY_REQUESTS
-      }
+        status: HttpStatus.TOO_MANY_REQUESTS,
+      };
     }
 
-    const ticketData = await this.movieRepository.getTicketData(uploadTicket)
+    const ticketData = await this.movieRepository.getTicketData(uploadTicket);
     if (!ticketData) {
       return {
         isValid: false,
-        message: "Ticket not found or Ticket expried!"
-      }
+        message: 'Ticket not found or Ticket expried!',
+      };
     }
 
-    const isValidTicket = await this.movieDomainServices.checkTicketIsValid(ticketData, uploadTicket)
+    const isValidTicket = await this.movieDomainServices.checkTicketIsValid(
+      ticketData,
+      uploadTicket,
+    );
 
-    return isValidTicket
-
+    return isValidTicket;
   }
 
-
-  registerMovieUploadTicket = registerMovieUploadTicketService
+  registerMovieUploadTicket = registerMovieUploadTicketService;
 }

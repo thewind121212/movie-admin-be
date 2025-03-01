@@ -16,9 +16,8 @@ import { S3Module } from '../s3/s3.module';
         db: 3,
       },
     }),
-    S3Module
-  ]
-  ,
+    S3Module,
+  ],
   providers: [
     {
       provide: 'DOCKER',
@@ -34,6 +33,5 @@ import { S3Module } from '../s3/s3.module';
     },
   ],
   exports: [DockerService],
-  
 })
 export class DockerModule {}

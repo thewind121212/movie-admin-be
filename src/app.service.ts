@@ -5,19 +5,18 @@ import { UserSecurity } from './core/user/security/user.security';
 
 @Injectable()
 export class AppService {
-
   constructor(
+    // eslint-disable-next-line no-unused-vars
     private readonly nodeMailerService: NodemailerService,
-    private readonly userSecurity: UserSecurity
-  ) { }
+    // eslint-disable-next-line no-unused-vars
+    private readonly userSecurity: UserSecurity,
+  ) {}
 
-  async ping() {
+  ping() {
     return 'pong';
   }
 
-
   async sendEmail() {
-
     const content = registerEmailTemplate(
       'Thank you for registering with us!',
       ` 
@@ -30,14 +29,14 @@ export class AppService {
             data-saferedirecturl=""
             data-darkreader-inline-color="{{.AlternativeLink}}">Register Link!
           </a> 
-        `
-    )
+        `,
+    );
     const email = {
       from: 'adminMovie@wliafdew.dev',
       to: 'linh@wliafdew.dev',
       subject: 'Test email',
       html: content,
-    }
+    };
 
     await this.nodeMailerService.nodemailer.sendMail(email);
   }
