@@ -9,8 +9,20 @@ export class SubmitForgotPassGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const { token, password} = request.body
-        if (!token || !password) {
+        const token = request.headers['x-forgot-token']
+        if (!token) {
+            throw new HttpException(
+                {
+                    status: 'fail',
+                    data: null,
+                    message: 'Token is required'
+                },
+                HttpStatusCode.Forbidden
+            )
+        }
+
+        const {  password} = request.body
+        if (!password) {
             throw new HttpException(
                 {
                     status: 'fail',

@@ -10,7 +10,7 @@ export class AuthMiddleware implements NestMiddleware {
     private readonly userSecurity: UserSecurity
   ) { }
 
-  use(req: Request, res: Response, next: NextFunction
+  async use(req: Request, res: Response, next: NextFunction
   ) {
     // check if access token is valid 
 
@@ -26,7 +26,7 @@ export class AuthMiddleware implements NestMiddleware {
     }
 
 
-    const verifyResult = this.userSecurity.verifyJWT(req.headers.authorization)
+    const verifyResult = await this.userSecurity.verifyJWT(req.headers.authorization, 'AUTHENTICATION')
 
 
     if (verifyResult.message !== 'Token is expired' && verifyResult.isValid === false) {

@@ -33,7 +33,7 @@ export class refreshAccessTokenGuard implements CanActivate {
         console.log(req.headers.authorization)
 
 
-        const verifyResult = this.userSecurity.verifyJWT(req.headers.authorization)
+        const verifyResult = await this.userSecurity.verifyJWT(req.headers.authorization, 'REFRESH')
 
 
         //if token is invalid
@@ -65,7 +65,7 @@ export class refreshAccessTokenGuard implements CanActivate {
         if (verifyResult.message === 'Token is valid' && verifyResult.isValid === true) {
             // refresh token the token
             const { email, userId } = verifyResult
-            const newAccessToken = this.userSecurity.signJWT({ email, userId }, '1h', 'refresh')
+            const newAccessToken = this.userSecurity.signJWT({ email, userId }, '1h', 'REFRESH')
             req.body = {
                 ...req.body,
                 token: newAccessToken

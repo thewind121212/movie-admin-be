@@ -97,7 +97,7 @@ export class UserDomainServices {
         try {
             const signToken = this.userSecurityServices.signJWT({
                 email
-            }, '3d', 'register-request-approval')
+            }, '3d', 'REGISTER_REQUEST')
 
             if (!signToken) {
                 throw new Error('Error signing token')
@@ -217,13 +217,13 @@ export class UserDomainServices {
             }
 
             //after all valid gen access token  
-            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '1h', 'login')
+            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '1h', 'AUTHENTICATION')
             if (!token) {
                 throw new Error('Error signing token')
             }
 
             //after gen acces token gen refresh token
-            const refreshToken = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '7d', 'refresh')
+            const refreshToken = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '7d', 'REFRESH')
             if (!refreshToken) {
                 throw new Error('Error signing refresh token')
             }
@@ -287,7 +287,7 @@ export class UserDomainServices {
                 }
             }
 
-            const forgotPasswordToken = this.userSecurityServices.signJWT({ email: body.email, userId: user.id }, '15m', 'forgot-password')
+            const forgotPasswordToken = this.userSecurityServices.signJWT({ email: body.email, userId: user.id }, '15m', "FORGOT_PASSWORD")
             if (!forgotPasswordToken) {
                 throw new Error('Error signing token')
             }
@@ -344,7 +344,7 @@ export class UserDomainServices {
         mailOptions?: MailOptions
     }> {
         try {
-            const tokenResult = this.userSecurityServices.verifyJWT(body.token)
+            const tokenResult = await this.userSecurityServices.verifyJWT(body.token, "FORGOT_PASSWORD")
             if (!tokenResult.isValid || !tokenResult.userId || !tokenResult.email) {
                 return {
                     isError: true,
@@ -392,7 +392,7 @@ export class UserDomainServices {
 
             return {
                 isError: false,
-                message: 'Register request created successfully',
+                message: 'Password reset successfully',
                 mailOptions,
             }
 
@@ -542,7 +542,7 @@ export class UserDomainServices {
                 }
             }
 
-            const cachingLogin = await  this.userRepositories.getValueFromRedis(`${user?.id}${LOGIN_EXT}`)
+            const cachingLogin = await this.userRepositories.getValueFromRedis(`${user?.id}${LOGIN_EXT}`)
             if (!cachingLogin) {
                 return {
                     isError: true,

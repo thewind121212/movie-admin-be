@@ -166,6 +166,7 @@ export class UserRepositories {
             if (!value) {
                 return null
             }
+            
 
             const valueAsJson = JSON.parse(value)
 

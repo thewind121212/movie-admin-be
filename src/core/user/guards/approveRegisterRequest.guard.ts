@@ -3,7 +3,6 @@ import { RegisterRequest } from '../domain/user.entity';
 import { HttpStatusCode } from 'axios';
 import { UserRepositories } from 'src/core/user/repositories/user.repositories';
 import { RegistrationRequests, User } from '@prisma/client'
-import { is } from 'drizzle-orm';
 
 
 @Injectable()

@@ -1,6 +1,6 @@
 
-import { Controller, Body, Post, Response, HttpStatus, UseGuards } from '@nestjs/common';
-import { Response as ExpressResponse } from 'express';
+import { Controller, Body, Post, Response, HttpStatus, UseGuards, Request } from '@nestjs/common';
+import { Response as ExpressResponse, Request as ExpressRequest } from 'express';
 import { UserService } from 'src/core/user/services/user.service';
 import { ResponseType } from 'src/interface/response.interface';
 //guard
@@ -41,7 +41,7 @@ export class UserController {
   }
 
 
-  @Post('auth/registerRequest/vaildate')
+  @Post('auth/registerRequest/validate')
   @UseGuards(ValidateTokenRegisterRequestGuard)
   async validateRegisterRequest(
     @Body('email') email: string,
@@ -78,17 +78,23 @@ export class UserController {
   @Post('auth/register')
   @UseGuards(RegisterGuard)
   async register(
-    @Body() body: { email: string, password: string, token: string, name: string },
+    @Body() body: { email: string, password: string, name: string },
+    @Request() req: ExpressRequest,
     @Response() res: ExpressResponse
   ) {
-    const { email, password, token, name } = body;
-    const { status, message } = await this.userService.register({ email, password, token, name });
+    const { email, password, name } = body;
+
+    // Note: No need to check because the guard will check it
+    const registerToken = (req.headers['x-register-token']) as string;
+
+    const { status, message } = await this.userService.register({ email, password, token: registerToken, name });
     const response: ResponseType = {
       message,
       data: null,
       created_at: new Date()
     }
     return res.status(status).json({ ...response });
+    return res.status(HttpStatus.OK).json({ message: 'Register request is valid', data: { email, password, name }, created_at: new Date() });
   }
 
   @Post('auth/login')
@@ -161,9 +167,11 @@ export class UserController {
   @UseGuards(SubmitForgotPassGuard)
   async submitForgotPassword(
     @Body() body: { token: string, password: string },
+    @Request() req: ExpressRequest,
     @Response() res: ExpressResponse
   ) {
-    const { token, password } = body;
+    const {  password } = body;
+    const token = (req.headers['x-forgot-token']) as string;
     const { status, message } = await this.userService.submitForgotPassword({ token, password });
     const response: ResponseType = {
       message,
@@ -177,7 +185,6 @@ export class UserController {
   @Post('auth/token/verifyAccessToken')
   @UseGuards(verifyAccessTokenGuard)
   async verifyAccessToken(
-    @Body() body: { token: string, password: string },
     @Response() res: ExpressResponse
   ) {
     return res.status(HttpStatus.ACCEPTED).json({
@@ -242,10 +249,10 @@ export class UserController {
   @Post('auth/2FA/verifyTOTP')
   @UseGuards(verifyTOTPGuard)
   async verifyTOTP(
-    @Body() body: { token: string, email: string, nonce : string },
+    @Body() body: { token: string, email: string, nonce: string },
     @Response() res: ExpressResponse
   ) {
-    const { status, message, token ,refreshToken } = await this.userService.verifyTOTP(body.email, body.token , body.nonce);
+    const { status, message, token, refreshToken } = await this.userService.verifyTOTP(body.email, body.token, body.nonce);
     const response: ResponseType = {
       message,
       data: null,
@@ -253,7 +260,7 @@ export class UserController {
     }
 
     if (token && refreshToken) {
-       response.data = { token, refreshToken }
+      response.data = { token, refreshToken }
     }
 
     return res.status(status).json({ ...response });

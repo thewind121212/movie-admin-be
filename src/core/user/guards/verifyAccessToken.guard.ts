@@ -30,7 +30,7 @@ export class verifyAccessTokenGuard implements CanActivate {
         }
 
 
-        const verifyResult = this.userSecurity.verifyJWT(req.headers.authorization)
+        const verifyResult = await  this.userSecurity.verifyJWT(req.headers.authorization, 'AUTHENTICATION')
 
 
         if (verifyResult.message !== 'Token is expired' && verifyResult.isValid === false) {

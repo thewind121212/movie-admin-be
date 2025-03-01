@@ -20,11 +20,9 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
 
-        // check is user already exist
 
+        const token = request.headers['x-register-token']
 
-
-        const { token } = request.body
         if (!token) {
             throw new HttpException(
                 {
@@ -38,7 +36,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
 
 
 
-        const { isValid, email, message } = this.userSecurity.verifyJWT(token)
+        const { isValid, email, message } = await this.userSecurity.verifyJWT(token, 'REGISTER_REQUEST')
         if (!isValid) {
             throw new HttpException(
                 {
@@ -50,12 +48,12 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
             )
         }
 
-        if (!email) {
+        if (!email || email !== request.body.email) {
             throw new HttpException(
                 {
                     status: 'Forbidden',
                     data: null,
-                    message: 'Invalid token please try again'
+                    message: 'Invalid token please try again email not match'
                 },
                 HttpStatusCode.Forbidden
             )
