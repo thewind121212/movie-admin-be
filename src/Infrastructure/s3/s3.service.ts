@@ -5,23 +5,26 @@ import { scanFolder } from 'src/core/movie/movie.utils';
 
 @Injectable()
 export class S3Service {
-  public s3: AWS.S3
+  public s3: AWS.S3;
   private readonly logger = new Logger(S3Service.name);
   constructor(@Inject('S3') private readonly s3Client: AWS.S3) {
     this.s3 = s3Client;
   }
 
-  uploadHLSBunchTsFilesToS3(folderPath: string, S3Path: string, filename: string) {
-    scanFolder(folderPath, this.s3Client, filename);
+  uploadHLSBunchTsFilesToS3(
+    folderPath: string,
+    S3Path: string,
+    filename: string,
+  ) {
+    void scanFolder(folderPath, this.s3Client, filename);
   }
 
-
-   removePathFromS3(bucketName: string, key: string) {
+  removePathFromS3(bucketName: string, key: string) {
     const params = {
       Bucket: bucketName,
-      Key: key
-    }
-      this.s3Client.deleteObject(params, (err, data) => {
+      Key: key,
+    };
+    this.s3Client.deleteObject(params, (err, data) => {
       if (err) {
         console.log(err);
       } else {
@@ -36,13 +39,12 @@ export class S3Service {
       Key: String(key),
       Body: fileStream,
       ACL: 'public-read',
-    }
+    };
     try {
-      let s3Response = await this.s3Client.upload(params).promise();
+      const s3Response = await this.s3Client.upload(params).promise();
       return s3Response;
     } catch (e) {
       console.log(e);
     }
   }
-
 }

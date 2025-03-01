@@ -1,16 +1,17 @@
-import { Controller, Get, Header,  Response, Headers } from '@nestjs/common';
+import { Controller, Get, Response, Headers } from '@nestjs/common';
 import { AppService } from '../../app.service';
 
-import { Response as ExpressResponse} from 'express';
+import { Response as ExpressResponse } from 'express';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) { }
+  // eslint-disable-next-line no-unused-vars
+  constructor(private readonly appService: AppService) {}
 
   @Get()
-  async ping(
+  ping(
     @Headers('Authorization') authorization: string,
-    @Response() res: ExpressResponse
+    @Response() res: ExpressResponse,
   ) {
     // this.appService.ping();
     return res.status(401).json({ message: 'pong' });

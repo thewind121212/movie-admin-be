@@ -1,8 +1,5 @@
 // @ts-check
-import eslint from '@eslint/js';
-import eslintPluginPrettierRecommended, {
-  ignores,
-} from 'eslint-plugin-prettier/recommended';
+import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -15,12 +12,10 @@ export default tseslint.config(
       '/postgres_data',
       '/minio-data',
       '/processed-client',
-      '/data-mailpit'
+      '/data-mailpit',
     ],
   },
-  eslint.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
-  eslintPluginPrettierRecommended,
   {
     languageOptions: {
       globals: {
@@ -46,7 +41,7 @@ export default tseslint.config(
       // Relax the rule to allow intentionally unawaited promises (via void)
       '@typescript-eslint/no-floating-promises': ['warn', { ignoreVoid: true }],
       'no-unused-vars': 'warn',
-
+      '@typescript-eslint/no-misused-promises': 'off',
       // If you find no-unsafe-argument too restrictive, you can disable it:
       '@typescript-eslint/no-unsafe-argument': 'off',
     },

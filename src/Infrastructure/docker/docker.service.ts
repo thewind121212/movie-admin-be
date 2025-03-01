@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import Docker from 'dockerode';
 import { getVideoDurationFromLog } from './docker.utils';
@@ -32,8 +31,11 @@ export class DockerService {
 
     constructor(
         @InjectQueue('video-post-process')
+        // eslint-disable-next-line no-unused-vars
         private readonly tsChunkProcessQueue: Queue,
+        // eslint-disable-next-line no-unused-vars
         @Inject('DOCKER') private readonly docker: Docker,
+        // eslint-disable-next-line no-unused-vars
         @Inject('CHECK_QUEUE_FINISHED') private readonly checkQueue: typeof checkQueueFinished,
     ) {
     }
@@ -65,7 +67,6 @@ export class DockerService {
         const processedDir = path.resolve(`./processed/${videoName}`);
 
         let batchPool: string[] = [];
-        let ffmpegLog = '';
 
         let tsChunkCount = 0;
         let thumbnails: string[] = [];
@@ -86,12 +87,11 @@ export class DockerService {
         watcher.on('add', (filePath) => {
             tsChunkCount++;
             if (batchPool.length === BATCH_SIZE) {
-                this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName, batchType: 'normal' }, {
+                void this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName, batchType: 'normal' }, {
                     jobId: `${videoName}-${uuidv4()}`,
                 });
                 batchPool = [];
                 batchPool.length = 0;  
-                ffmpegLog = ''; 
             }
             batchPool.push(filePath);
         });
@@ -103,12 +103,8 @@ export class DockerService {
             this.logger.log(`stdout: ${data}`);
         });
 
-        process.stderr.on('data', (data) => {
-            ffmpegLog += data + '\n';
-        });
-
         await new Promise((resolve) => {
-            process.on('close', async () => {
+            process.on('close', () => {
                 this.logger.log('FFmpeg processing completed');
                 resolve(true);
             });
@@ -136,7 +132,7 @@ export class DockerService {
 
         if (restBatch.length > 0) {
             this.logger.log('Processing remaining batch...');
-            this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: restBatch, videoName, batchType: 'rest' }, {
+            void this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: restBatch, videoName, batchType: 'rest' }, {
                 jobId: `${videoName}-${uuidv4()}`,
             });
         }
@@ -156,6 +152,7 @@ export class DockerService {
                 progressBar.update(thumbnails.length);
                 if (thumbnails.length === tsChunkCount - 1) {
                     progressBar.update(tsChunkCount);
+                    console.log('\n');
                     this.logger.log('All snapshot has been processed');
                     progressBar.stop();
                     clearInterval(interval);
@@ -165,7 +162,7 @@ export class DockerService {
         })
 
 
-        this.tsChunkProcessQueue.add('upload-snapshot', { snapShotPaths: thumbnails, videoName }, {
+         void this.tsChunkProcessQueue.add('upload-snapshot', { snapShotPaths: thumbnails, videoName }, {
             jobId: `${videoName}-${uuidv4()}`,
         });
 
@@ -174,10 +171,10 @@ export class DockerService {
         if (isQueueFinished) {
             this.logger.log('Queue finished');
             await new Promise((resolve) => { setTimeout(() => { resolve(true) }, 3000) });
-            watcher.close().then(() => {
+            void watcher.close().then(() => {
                 this.logger.log(`Watcher folder ${path.resolve(`./processed/${videoName}`)} closed`);
             })
-            watcherThumbnail.close().then(() => {
+            void watcherThumbnail.close().then(() => {
                 this.logger.log(`Watcher folder ${path.resolve(`./processed/${videoName}/thumbnail`)} closed`);
             }
             )
@@ -186,7 +183,7 @@ export class DockerService {
             thumbnails = [];
             thumbnails.length = 0;
             tsChunkCount = 0;
-            this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+            void this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
                 jobId: `${videoName}-${uuidv4()}`,
             })
 
@@ -244,7 +241,7 @@ export class DockerService {
             watcher.on('add', (path) => {
                 this.logger.log(`File ${path} has been added`);
                 if (batchPool.length === BATCH_SIZE) {
-                    this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
+                    void this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
                         jobId: `${videoName}-${uuidv4()}`,
                     })
                     batchPool = []
@@ -256,29 +253,29 @@ export class DockerService {
 
             await container.remove();
             if (batchPool.length > 0) {
-                await new Promise(async (resolve) =>
+                await new Promise( (resolve) =>
                     chokidar.watch([...batchPool], {
                         persistent: true,
                         awaitWriteFinish: {
                             stabilityThreshold: 2000,
                             pollInterval: 100
                         }
-                    }).once('add', async () => {
-                        await this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
+                    }).once('add',  () => {
+                        void  this.tsChunkProcessQueue.add('ts-chunk-process', { tsChunkBatchPaths: batchPool, videoName }, {
                             jobId: `${videoName}-${uuidv4()}`,
                         })
                         return resolve(true)
                     }))
-                this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                void this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
                     jobId: `${videoName}-${uuidv4()}`,
                 })
             } else {
-                this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
+                void this.tsChunkProcessQueue.add('clean-up-ts-chunk', { videoName }, {
                     jobId: `${videoName}-${uuidv4()}`,
                 })
             }
 
-            watcher.close().then(() => {
+            void watcher.close().then(() => {
                 this.logger.log(`Watcher folder ${path.resolve(`./processed/${videoName}`)} closed`);
             })
 

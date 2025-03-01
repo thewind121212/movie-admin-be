@@ -1,5 +1,5 @@
 export const registerEmailTemplate = (header: string, body: string) => {
-    return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -271,5 +271,5 @@ export const registerEmailTemplate = (header: string, body: string) => {
     </table>
 </div>
 </body>
-</html>`
-}
+</html>`;
+};
