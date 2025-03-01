@@ -4,7 +4,7 @@ import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestj
 import { HttpStatusCode } from 'axios';
 import { UserSecurity } from '../security/user.security';
 import { UserRepositories } from '../repositories/user.repositories';
-import { FORGOT_PASS_EXT } from '../user.config';
+import { FORGOT_PASS_EXT, tokenName } from '../user.config';
 
 
 @Injectable()
@@ -19,7 +19,7 @@ export class VerifyResetLinkGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const  token  = request.headers['x-forgot-token'] as string;
+        const  token  = request.headers[tokenName.FORGOT_PASSWORD] as string;
 
         if (!token) {
             throw new HttpException(

@@ -4,6 +4,7 @@ import { RegisterRequest } from '../domain/user.entity';
 import { HttpStatusCode } from 'axios';
 import { UserRepositories } from '../repositories/user.repositories';
 import { UserSecurity } from '../security/user.security';
+import { tokenName } from '../user.config';
 
 
 @Injectable()
@@ -18,7 +19,7 @@ export class RegisterGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
         const {email, password, name  } = request.body
-        const token = request.headers['x-register-token']
+        const token = request.headers[tokenName.REGISTER_REQUEST]
         if (!email || !password || !name || !token) {
             throw new HttpException(
                 {
