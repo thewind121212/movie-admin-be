@@ -16,6 +16,7 @@ import { verifyAccessTokenGuard } from 'src/core/user/guards/verifyAccessToken.g
 import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.guard';
 import { toggleTOTPGuard } from 'src/core/user/guards/toggleTOTP.guard';
 import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
+import { tokenName } from 'src/core/user/user.config';
 
 @Controller('user')
 export class UserController {
@@ -85,7 +86,7 @@ export class UserController {
     const { email, password, name } = body;
 
     // Note: No need to check because the guard will check it
-    const registerToken = (req.headers['x-register-token']) as string;
+    const registerToken = (req.headers[tokenName.REGISTER_REQUEST]) as string;
 
     const { status, message } = await this.userService.register({ email, password, token: registerToken, name });
     const response: ResponseType = {
@@ -171,7 +172,7 @@ export class UserController {
     @Response() res: ExpressResponse
   ) {
     const {  password } = body;
-    const token = (req.headers['x-forgot-token']) as string;
+    const token = (req.headers[tokenName.FORGOT_PASSWORD]) as string;
     const { status, message } = await this.userService.submitForgotPassword({ token, password });
     const response: ResponseType = {
       message,
@@ -250,9 +251,11 @@ export class UserController {
   @UseGuards(verifyTOTPGuard)
   async verifyTOTP(
     @Body() body: { token: string, email: string, nonce: string },
+    @Request() req: ExpressRequest,
     @Response() res: ExpressResponse
   ) {
-    const { status, message, token, refreshToken } = await this.userService.verifyTOTP(body.email, body.token, body.nonce);
+    const nonce = (req.headers[tokenName.NONCE_2FA]) as string;
+    const { status, message, token, refreshToken } = await this.userService.verifyTOTP(body.email, body.token, nonce);
     const response: ResponseType = {
       message,
       data: null,

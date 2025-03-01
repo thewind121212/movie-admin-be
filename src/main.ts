@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { tokenName } from './core/user/user.config';
 import cookieParser from 'cookie-parser';
 
 
@@ -8,10 +9,12 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use(cookieParser());
 
+  const tokensName = Object.values(tokenName).join(', ');
+
   app.enableCors({
     origin: 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept, Authorization, x-register-token x-forgot-token',
+    allowedHeaders: `Content-Type, Accept, Authorization, ${tokensName}`,
     credentials: true,
   });
 

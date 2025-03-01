@@ -4,6 +4,7 @@ import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestj
 import { UserSecurity } from '../security/user.security';
 import { HttpStatusCode } from 'axios';
 import { UserRepositories } from '../repositories/user.repositories';
+import { tokenName } from '../user.config';
 
 
 @Injectable()
@@ -21,7 +22,8 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
         const request = context.switchToHttp().getRequest();
 
 
-        const token = request.headers['x-register-token']
+        const token = request.headers[tokenName.REGISTER_REQUEST]
+
 
         if (!token) {
             throw new HttpException(
@@ -48,12 +50,12 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
             )
         }
 
-        if (!email || email !== request.body.email) {
+        if (!email) {
             throw new HttpException(
                 {
                     status: 'Forbidden',
                     data: null,
-                    message: 'Invalid token please try again email not match'
+                    message: 'Invalid token'
                 },
                 HttpStatusCode.Forbidden
             )
