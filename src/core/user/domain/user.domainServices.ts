@@ -7,7 +7,6 @@ import { REGISTER_REQUEST_RETRY_DAY } from "../user.config";
 import { DateTime } from 'luxon';
 import crypto from 'bcrypt'
 import { FORGOT_PASS_EXT, LOGIN_EXT } from "../user.config";
-import { is } from "drizzle-orm";
 
 
 
@@ -291,7 +290,7 @@ export class UserDomainServices {
             if (!forgotPasswordToken) {
                 throw new Error('Error signing token')
             }
-            const reditsWriteResult = await this.userRepositories.writeToRedis(user.id + FORGOT_PASS_EXT, forgotPasswordToken, '15m')
+            const reditsWriteResult = await this.userRepositories.writeToRedis(user.id + FORGOT_PASS_EXT, JSON.stringify({}), '15m')
 
             if (!reditsWriteResult) {
                 return {
@@ -372,6 +371,7 @@ export class UserDomainServices {
             }
 
             const removeResult = await this.userRepositories.removeKey(tokenResult.userId + FORGOT_PASS_EXT)
+            const invalidTokenResult = await this.userRepositories.removeKey(`${user.email}-${'FORGOT_PASSWORD'}`)
 
             if (!removeResult) {
                 throw new Error('Error removing reset password token')

@@ -66,7 +66,7 @@ export class UserSecurity {
     // verify JWT
 
     public async verifyJWT(token: string, purpose: JWT_PURPOSE_TYPE): Promise<{
-        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:',
+        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:' | 'Invalid token please try again with the latest token',
         email: string | null
         userId?: string | null,
         isValid: boolean,
@@ -107,7 +107,7 @@ export class UserSecurity {
                 return {
                     email: null,
                     isValid: false,
-                    message: 'Invalid token',
+                    message: 'Invalid token please try again with the latest token',
                 }
             }
 
