@@ -1,5 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
-import { HttpStatusCode } from 'axios';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { Request } from 'express';
 import { MovieServices } from '../services/movie.service';
 import { MovieDomainServices } from '../domain/movie.domainServices';
@@ -30,7 +29,7 @@ export class MovieGuard implements CanActivate {
                     data: null,
                     message: 'Too many movies being processed. Please try again later'
                 },
-                HttpStatusCode.TooManyRequests
+                HttpStatus.TOO_MANY_REQUESTS
             )
         }
 
@@ -42,7 +41,7 @@ export class MovieGuard implements CanActivate {
                     data: null,
                     message: 'Upload ticket not found!'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.FORBIDDEN
             )
         }
 
@@ -57,7 +56,7 @@ export class MovieGuard implements CanActivate {
                     data: null,
                     message: isValidTicket.message,
                 },
-                isValidTicket.status ? isValidTicket.status : HttpStatusCode.Forbidden
+                isValidTicket.status ? isValidTicket.status : HttpStatus.FORBIDDEN
             )
 
         }

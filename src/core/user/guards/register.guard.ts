@@ -1,7 +1,6 @@
 
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { RegisterRequest } from '../domain/user.entity';
-import { HttpStatusCode } from 'axios';
 import { UserRepositories } from '../repositories/user.repositories';
 import { UserSecurity } from '../security/user.security';
 import { tokenName } from '../user.config';
@@ -27,7 +26,7 @@ export class RegisterGuard implements CanActivate {
                     data: null,
                     message: 'Invalid request missing required fields'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
 
@@ -40,7 +39,7 @@ export class RegisterGuard implements CanActivate {
                     data: null,
                     message: 'Invalid email'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
 
@@ -53,7 +52,7 @@ export class RegisterGuard implements CanActivate {
                     data: null,
                     message: 'User already exist'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
 
@@ -66,7 +65,7 @@ export class RegisterGuard implements CanActivate {
                     data: null,
                     message: 'Invalid token please try again'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.FORBIDDEN
             )
         }
         return true

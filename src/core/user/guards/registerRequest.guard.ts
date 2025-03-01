@@ -1,6 +1,5 @@
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { RegisterRequest } from '../domain/user.entity';
-import { HttpStatusCode } from 'axios';
 
 
 @Injectable()
@@ -18,7 +17,7 @@ export class RegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'Invalid email'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_REQUEST
             )
         }
         return true

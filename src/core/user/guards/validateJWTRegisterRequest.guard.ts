@@ -1,8 +1,7 @@
 
 
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { UserSecurity } from '../security/user.security';
-import { HttpStatusCode } from 'axios';
 import { UserRepositories } from '../repositories/user.repositories';
 import { tokenName } from '../user.config';
 
@@ -32,7 +31,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'Token not found'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.UNAUTHORIZED
             )
         }
 
@@ -46,7 +45,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: message,
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.BAD_REQUEST
             )
         }
 
@@ -57,7 +56,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'Invalid token'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.UNAUTHORIZED
             )
         }
 
@@ -70,7 +69,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
                     data: null,
                     message: 'User already exist'
                 },
-                HttpStatusCode.Forbidden
+                HttpStatus.BAD_REQUEST
             )
         }
 

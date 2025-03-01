@@ -1,7 +1,6 @@
 
 
-import { Injectable, CanActivate, ExecutionContext, HttpException } from '@nestjs/common';
-import { HttpStatusCode } from 'axios';
+import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
 import { UserSecurity } from '../security/user.security';
 
 
@@ -25,7 +24,7 @@ export class refreshAccessTokenGuard implements CanActivate {
                     data: null,
                     message: 'Invalid request missing required fields'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatus.BAD_GATEWAY
             )
         }
 
@@ -42,7 +41,7 @@ export class refreshAccessTokenGuard implements CanActivate {
                     data: null,
                     message: verifyResult.message
                 },
-                HttpStatusCode.Unauthorized
+                HttpStatus.UNAUTHORIZED
             )
 
         }
@@ -54,7 +53,7 @@ export class refreshAccessTokenGuard implements CanActivate {
                     data: null,
                     message: 'Refresh token is expired , please login again'
                 },
-                HttpStatusCode.Unauthorized
+                HttpStatus.UNAUTHORIZED
             )
         }
 
