@@ -17,7 +17,6 @@ export class refreshAccessTokenGuard implements CanActivate {
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const req = context.switchToHttp().getRequest();
 
-        console.log(req.headers)
 
         if (!req.headers.authorization) {
             throw new HttpException(
@@ -30,7 +29,6 @@ export class refreshAccessTokenGuard implements CanActivate {
             )
         }
 
-        console.log(req.headers.authorization)
 
 
         const verifyResult = await this.userSecurity.verifyJWT(req.headers.authorization, 'REFRESH')
@@ -42,7 +40,7 @@ export class refreshAccessTokenGuard implements CanActivate {
                 {
                     status: 'fail',
                     data: null,
-                    message: 'Invalid token'
+                    message: verifyResult.message
                 },
                 HttpStatusCode.Unauthorized
             )
@@ -65,7 +63,7 @@ export class refreshAccessTokenGuard implements CanActivate {
         if (verifyResult.message === 'Token is valid' && verifyResult.isValid === true) {
             // refresh token the token
             const { email, userId } = verifyResult
-            const newAccessToken = this.userSecurity.signJWT({ email, userId }, '1h', 'REFRESH')
+            const newAccessToken = this.userSecurity.signJWT({ email, userId }, '1h', 'AUTHENTICATION')
             req.body = {
                 ...req.body,
                 token: newAccessToken

@@ -66,7 +66,7 @@ export class UserSecurity {
     // verify JWT
 
     public async verifyJWT(token: string, purpose: JWT_PURPOSE_TYPE): Promise<{
-        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:' | 'Invalid token please try again with the latest token',
+        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:' | 'Invalid token please try again with the latest token' | 'Invalid token type',
         email: string | null
         userId?: string | null,
         isValid: boolean,
@@ -84,16 +84,18 @@ export class UserSecurity {
                 algorithms: ['HS256'],
             })
 
-            const purpose = typeof decoded !== 'string' && 'purpose' in decoded ? decoded.purpose : null
+            const tokenPurpose = typeof decoded !== 'string' && 'purpose' in decoded ? decoded.purpose : null
             const email = typeof decoded !== 'string' && 'email' in decoded ? decoded.email : null
 
-            if (purpose !== purpose || !email) {
+
+            if (tokenPurpose !== purpose || !email) {
                 return {
-                    message: 'Invalid token',
+                    message: 'Invalid token type',
                     email: null,
                     isValid: false,
                 }
             }
+
 
 
             const redisToken: { token: string } = await this.userRepositories.getValueFromRedis(`${email}-${purpose}`)
