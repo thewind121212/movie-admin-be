@@ -7,7 +7,6 @@ import { REGISTER_REQUEST_RETRY_DAY } from "../user.config";
 import { DateTime } from 'luxon';
 import crypto from 'bcrypt'
 import { FORGOT_PASS_EXT, LOGIN_EXT } from "../user.config";
-import { is } from "drizzle-orm";
 
 
 
@@ -97,7 +96,7 @@ export class UserDomainServices {
         try {
             const signToken = this.userSecurityServices.signJWT({
                 email
-            }, '3d', 'register-request-approval')
+            }, '3d', 'REGISTER_REQUEST')
 
             if (!signToken) {
                 throw new Error('Error signing token')
@@ -217,13 +216,13 @@ export class UserDomainServices {
             }
 
             //after all valid gen access token  
-            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '1h', 'login')
+            const token = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '1h', 'AUTHENTICATION')
             if (!token) {
                 throw new Error('Error signing token')
             }
 
             //after gen acces token gen refresh token
-            const refreshToken = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '7d', 'refresh')
+            const refreshToken = this.userSecurityServices.signJWT({ email: credentials.email, userId: user.id }, '7d', 'REFRESH')
             if (!refreshToken) {
                 throw new Error('Error signing refresh token')
             }
@@ -287,11 +286,11 @@ export class UserDomainServices {
                 }
             }
 
-            const forgotPasswordToken = this.userSecurityServices.signJWT({ email: body.email, userId: user.id }, '15m', 'forgot-password')
+            const forgotPasswordToken = this.userSecurityServices.signJWT({ email: body.email, userId: user.id }, '15m', "FORGOT_PASSWORD")
             if (!forgotPasswordToken) {
                 throw new Error('Error signing token')
             }
-            const reditsWriteResult = await this.userRepositories.writeToRedis(user.id + FORGOT_PASS_EXT, forgotPasswordToken, '15m')
+            const reditsWriteResult = await this.userRepositories.writeToRedis(user.id + FORGOT_PASS_EXT, JSON.stringify({}), '15m')
 
             if (!reditsWriteResult) {
                 return {
@@ -344,7 +343,7 @@ export class UserDomainServices {
         mailOptions?: MailOptions
     }> {
         try {
-            const tokenResult = this.userSecurityServices.verifyJWT(body.token)
+            const tokenResult = await this.userSecurityServices.verifyJWT(body.token, "FORGOT_PASSWORD")
             if (!tokenResult.isValid || !tokenResult.userId || !tokenResult.email) {
                 return {
                     isError: true,
@@ -372,6 +371,7 @@ export class UserDomainServices {
             }
 
             const removeResult = await this.userRepositories.removeKey(tokenResult.userId + FORGOT_PASS_EXT)
+            const invalidTokenResult = await this.userRepositories.removeKey(`${user.email}-${'FORGOT_PASSWORD'}`)
 
             if (!removeResult) {
                 throw new Error('Error removing reset password token')
@@ -392,7 +392,7 @@ export class UserDomainServices {
 
             return {
                 isError: false,
-                message: 'Register request created successfully',
+                message: 'Password reset successfully',
                 mailOptions,
             }
 
@@ -542,7 +542,7 @@ export class UserDomainServices {
                 }
             }
 
-            const cachingLogin = await  this.userRepositories.getValueFromRedis(`${user?.id}${LOGIN_EXT}`)
+            const cachingLogin = await this.userRepositories.getValueFromRedis(`${user?.id}${LOGIN_EXT}`)
             if (!cachingLogin) {
                 return {
                     isError: true,

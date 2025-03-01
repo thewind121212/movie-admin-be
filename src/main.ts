@@ -9,18 +9,18 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: 'http://localhost:3000', 
+    origin: 'http://localhost:3000',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Accept, Authorization',
-    credentials: true, 
+    allowedHeaders: 'Content-Type, Accept, Authorization, x-register-token x-forgot-token',
+    credentials: true,
   });
 
   const config = new DocumentBuilder()
-  .setTitle('My API')
-  .setDescription('The API description')
-  .setVersion('1.0')
-  .addTag('users')  // Optional: Add your tags
-  .build();
+    .setTitle('My API')
+    .setDescription('The API description')
+    .setVersion('1.0')
+    .addTag('users')  // Optional: Add your tags
+    .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
   console.log('Servie is running on port:', process.env.PORT ?? 3000);

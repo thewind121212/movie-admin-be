@@ -19,7 +19,8 @@ export class VerifyResetLinkGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const { token } = request.body
+        const  token  = request.headers['x-forgot-token'] as string;
+
         if (!token) {
             throw new HttpException(
                 {
@@ -27,12 +28,12 @@ export class VerifyResetLinkGuard implements CanActivate {
                     data: null,
                     message: 'Token not found'
                 },
-                HttpStatusCode.BadRequest
+                HttpStatusCode.Forbidden
             )
         }
 
         // validate token
-        const tokenResult = this.userSecurity.verifyJWT(token)
+        const tokenResult = await this.userSecurity.verifyJWT(token, 'FORGOT_PASSWORD')
         if (!tokenResult.isValid || !tokenResult.userId) {
             throw new HttpException(
                 {

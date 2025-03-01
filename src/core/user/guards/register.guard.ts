@@ -17,7 +17,8 @@ export class RegisterGuard implements CanActivate {
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest();
-        const {email, password, name , token } = request.body
+        const {email, password, name  } = request.body
+        const token = request.headers['x-register-token']
         if (!email || !password || !name || !token) {
             throw new HttpException(
                 {
@@ -43,7 +44,6 @@ export class RegisterGuard implements CanActivate {
         }
 
         // check if email already exist
-
         const user = await this.userRepositories.getUser(email)
         if (user) {
             throw new HttpException(
@@ -57,7 +57,7 @@ export class RegisterGuard implements CanActivate {
         }
 
         // validate token
-        const tokenResult = this.userSecurity.verifyJWT(token)
+        const tokenResult = await  this.userSecurity.verifyJWT(token, 'REGISTER_REQUEST')
         if (!tokenResult.isValid || (email !== tokenResult.email)) {
             throw new HttpException(
                 {

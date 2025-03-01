@@ -7,6 +7,7 @@ import crypto from 'crypto'
 import otpauth from 'otpauth'
 import ms from 'ms'
 import qr from 'qrcode'
+import { JWT_PURPOSE_TYPE } from '../user.config';
 import { User } from '@prisma/client';
 
 
@@ -21,7 +22,7 @@ export class UserSecurity {
 
 
     // sign JWT 
-    public signJWT(data: any, exp: ms.StringValue, purpose: string): string | null {
+    public signJWT(data: any, exp: ms.StringValue, purpose: JWT_PURPOSE_TYPE): string | null {
         try {
             const defaultPayload = {
                 purpose,
@@ -32,6 +33,7 @@ export class UserSecurity {
                 ...data,
                 sub: data,
             }
+
 
             const jwtOptions: jwt.SignOptions = {
                 expiresIn: exp,
@@ -45,6 +47,13 @@ export class UserSecurity {
             }
 
             const token = jwt.sign(payload, process.env.JWT_SECRET as string, jwtOptions)
+            // save token to redis for one valid token at a time
+
+            const writeRedisResult = this.userRepositories.writeToRedis(`${data.email}-${purpose}`, JSON.stringify({ token: token }), exp)
+            if (!writeRedisResult) {
+                throw new Error('Failed to write token to redis')
+            }
+
             return token
 
         } catch (error) {
@@ -56,13 +65,14 @@ export class UserSecurity {
 
     // verify JWT
 
-    public verifyJWT(token: string): {
-        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:',
+    public async verifyJWT(token: string, purpose: JWT_PURPOSE_TYPE): Promise<{
+        message: 'Token is valid' | 'Token is expired' | 'Invalid token' | 'Token verification error:' | 'Invalid token please try again with the latest token' | 'Invalid token type',
         email: string | null
         userId?: string | null,
         isValid: boolean,
-    } {
+    }> {
         try {
+
             if (!process.env.JWT_SECRET) {
                 this.logger.error('JWT_SECRET is not defined')
                 throw new Error('JWT_SECRET is not defined')
@@ -73,6 +83,37 @@ export class UserSecurity {
                 issuer: 'wliafdew-movie-uploader',
                 algorithms: ['HS256'],
             })
+
+            const tokenPurpose = typeof decoded !== 'string' && 'purpose' in decoded ? decoded.purpose : null
+            const email = typeof decoded !== 'string' && 'email' in decoded ? decoded.email : null
+
+
+            if (tokenPurpose !== purpose || !email) {
+                return {
+                    message: 'Invalid token type',
+                    email: null,
+                    isValid: false,
+                }
+            }
+
+
+
+            const redisToken: { token: string } = await this.userRepositories.getValueFromRedis(`${email}-${purpose}`)
+
+
+            if (!redisToken) {
+                throw new Error('Token not found in redis')
+            }
+
+            if (redisToken.token !== token) {
+                return {
+                    email: null,
+                    isValid: false,
+                    message: 'Invalid token please try again with the latest token',
+                }
+            }
+
+
 
             return {
                 message: 'Token is valid',
@@ -223,8 +264,8 @@ export class UserSecurity {
         }
     }
 
-    public  genNonce(): string {
-        const nonce =  crypto.randomBytes(16).toString('base64')
+    public genNonce(): string {
+        const nonce = crypto.randomBytes(16).toString('base64')
         return nonce
     }
 
