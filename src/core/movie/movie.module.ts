@@ -16,7 +16,7 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
     BullModule.registerQueue({
       name: 'video-transform',
       redis: {
-        host: process.env.REDIS_HOST || 'localhost',
+        host: "10.10.0.162",
         port: parseInt(process.env.REDIS_PORT!) || 6379,
         db: 0,
       },
@@ -37,4 +37,4 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
     MovieDomainServices,
   ],
 })
-export class MovieModule {}
+export class MovieModule { }
