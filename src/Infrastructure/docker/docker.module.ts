@@ -11,8 +11,8 @@ import { S3Module } from '../s3/s3.module';
     BullModule.registerQueue({
       name: 'video-post-process',
       redis: {
-        host: 'localhost',
-        port: 6379,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT!) || 6379,
         db: 3,
       },
     }),
