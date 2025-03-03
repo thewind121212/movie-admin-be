@@ -27,11 +27,12 @@ import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.
 import { toggleTOTPGuard } from 'src/core/user/guards/toggleTOTP.guard';
 import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
 import { tokenName } from 'src/core/user/user.config';
+import { LogoutGuard } from 'src/core/user/guards/logout.guard';
 
 @Controller('user')
 export class UserController {
   // eslint-disable-next-line no-unused-vars
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post('auth/registerRequest/create')
   @UseGuards(RegisterRequestGuard)
@@ -104,11 +105,11 @@ export class UserController {
       created_at: new Date(),
     };
     return res.status(status).json({ ...response });
-    return res.status(HttpStatus.OK).json({
-      message: 'Register request is valid',
-      data: { email, password, name },
-      created_at: new Date(),
-    });
+    // return res.status(HttpStatus.OK).json({
+    //   message: 'Register request is valid',
+    //   data: { email, password, name },
+    //   created_at: new Date(),
+    // });
   }
 
   @Post('auth/login')
@@ -285,4 +286,27 @@ export class UserController {
 
     return res.status(status).json({ ...response });
   }
+
+  @Post('auth/logout')
+  @UseGuards(LogoutGuard)
+  async logOut(
+    @Request() req: ExpressRequest,
+    @Response() res: ExpressResponse,
+  ) {
+    const { message, status } =
+      await this.userService.logout(req.headers.authorization as string);
+
+
+
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date(),
+    };
+
+    return res.status(status).json({ ...response });
+  }
 }
+
+
+

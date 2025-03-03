@@ -8,6 +8,7 @@ import { DateTime } from 'luxon';
 import crypto from 'bcrypt';
 import { FORGOT_PASS_EXT, LOGIN_EXT } from '../user.config';
 
+
 @Injectable()
 export class UserDomainServices {
   constructor(
@@ -15,7 +16,7 @@ export class UserDomainServices {
     private readonly userRepositories: UserRepositories,
     // eslint-disable-next-line no-unused-vars
     private readonly userSecurityServices: UserSecurity,
-  ) {}
+  ) { }
 
   async registerRequest(email: string): Promise<{
     isError: boolean;
@@ -93,6 +94,7 @@ export class UserDomainServices {
         },
         '3d',
         'REGISTER_REQUEST',
+        false
       );
 
       if (!signToken) {
@@ -218,6 +220,7 @@ export class UserDomainServices {
         { email: credentials.email, userId: user.id },
         '1h',
         'AUTHENTICATION',
+        true,
       );
       if (!token) {
         throw new Error('Error signing token');
@@ -228,6 +231,7 @@ export class UserDomainServices {
         { email: credentials.email, userId: user.id },
         '7d',
         'REFRESH',
+        true
       );
       if (!refreshToken) {
         throw new Error('Error signing refresh token');
@@ -296,6 +300,7 @@ export class UserDomainServices {
         { email: body.email, userId: user.id },
         '15m',
         'FORGOT_PASSWORD',
+        true
       );
       if (!forgotPasswordToken) {
         throw new Error('Error signing token');
@@ -619,6 +624,60 @@ export class UserDomainServices {
         isError: true,
         isInternalError: true,
         message: 'Error verifying TOTP',
+      };
+    }
+  }
+
+
+
+  async logout(
+    accessToken: string,
+  ): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+  }> {
+    try {
+      //verify access token
+
+      const verifyAccessTokenResult = await this.userSecurityServices.verifyJWT(
+        accessToken,
+        'AUTHENTICATION'
+      )
+
+      if (!verifyAccessTokenResult.isValid) {
+        return {
+          isError: true,
+          message: 'Invalid access token',
+        }
+      }
+
+      //invalid refresh token from redis
+      const invalidResult = await this.userRepositories.removeKey(
+        `${verifyAccessTokenResult.email}-REFRESH`
+      )
+
+      //invalid access token from redis
+      const invalidAccessToken = await this.userRepositories.removeKey(
+        `${verifyAccessTokenResult.email}-AUTHENTICATION`
+      )
+
+      if (!invalidResult || !invalidAccessToken) {
+        throw new Error('Error removing refresh token')
+      }
+
+      // all process success
+      return {
+        isError: false,
+        message: 'Logout successfully',
+      };
+
+    } catch (error) {
+      console.log('Internal Error', error);
+      return {
+        isError: true,
+        isInternalError: true,
+        message: 'Error during logout',
       };
     }
   }
