@@ -6,6 +6,7 @@ import {
   HttpStatus,
   UseGuards,
   Request,
+  Delete,
 } from '@nestjs/common';
 import {
   Response as ExpressResponse,
@@ -287,7 +288,7 @@ export class UserController {
     return res.status(status).json({ ...response });
   }
 
-  @Post('auth/logout')
+  @Delete('auth/logout')
   @UseGuards(LogoutGuard)
   async logOut(
     @Request() req: ExpressRequest,

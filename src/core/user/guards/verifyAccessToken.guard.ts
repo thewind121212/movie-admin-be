@@ -25,7 +25,7 @@ export class verifyAccessTokenGuard implements CanActivate {
         HttpStatus.BAD_REQUEST,
       );
     }
-
+    
     const verifyResult = await this.userSecurity.verifyJWT(
       req.headers.authorization,
       'AUTHENTICATION',

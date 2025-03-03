@@ -198,7 +198,7 @@ export class UserDomainServices {
       if (!user) {
         return {
           isError: true,
-          message: 'User not found',
+          message: 'Invalid password or email',
         };
       }
 
@@ -211,7 +211,7 @@ export class UserDomainServices {
       if (!isPasswordMatch) {
         return {
           isError: true,
-          message: 'Invalid password',
+          message: 'Invalid password or email',
         };
       }
 
