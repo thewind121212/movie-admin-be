@@ -376,4 +376,40 @@ export class UserService {
       };
     }
   }
+
+  async logout(accessToken: string): Promise<{
+    message: string;
+    status: HttpStatus;
+  }> {
+    try {
+      const logoutResult = await this.userDomainServices.logout(accessToken);
+
+      if (logoutResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+      if (logoutResult.isError) {
+        return {
+          message: logoutResult.message,
+          status: HttpStatus.BAD_REQUEST,
+        };
+      }
+
+      return {
+        message: logoutResult.message,
+        status: HttpStatus.OK,
+      }
+
+
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
 }

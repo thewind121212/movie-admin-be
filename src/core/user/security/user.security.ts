@@ -14,13 +14,14 @@ export class UserSecurity {
   private readonly logger = new Logger(UserSecurity.name);
 
   // eslint-disable-next-line no-unused-vars
-  constructor(private readonly userRepositories: UserRepositories) {}
+  constructor(private readonly userRepositories: UserRepositories) { }
 
   // sign JWT
   public signJWT(
     data: any,
     exp: ms.StringValue,
     purpose: JWT_PURPOSE_TYPE,
+    writeRedis: boolean = false,
   ): string | null {
     try {
       const defaultPayload = {
@@ -47,13 +48,15 @@ export class UserSecurity {
       const token = jwt.sign(payload, process.env.JWT_SECRET, jwtOptions);
       // save token to redis for one valid token at a time
 
-      const writeRedisResult = this.userRepositories.writeToRedis(
-        `${data.email}-${purpose}`,
-        JSON.stringify({ token: token }),
-        exp,
-      );
-      if (!writeRedisResult) {
-        throw new Error('Failed to write token to redis');
+      if (writeRedis) {
+        const writeRedisResult = this.userRepositories.writeToRedis(
+          `${data.email}-${purpose}`,
+          JSON.stringify({ token: token }),
+          exp,
+        );
+        if (!writeRedisResult) {
+          throw new Error('Failed to write token to redis');
+        }
       }
 
       return token;
@@ -70,12 +73,12 @@ export class UserSecurity {
     purpose: JWT_PURPOSE_TYPE,
   ): Promise<{
     message:
-      | 'Token is valid'
-      | 'Token is expired'
-      | 'Invalid token'
-      | 'Token verification error:'
-      | 'Invalid token please try again with the latest token'
-      | 'Invalid token type';
+    | 'Token is valid'
+    | 'Token is expired'
+    | 'Invalid token'
+    | 'Token verification error:'
+    | 'Invalid token please try again with the latest token'
+    | 'Invalid token type';
     email: string | null;
     userId?: string | null;
     isValid: boolean;

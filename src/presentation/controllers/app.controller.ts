@@ -1,4 +1,4 @@
-import { Controller, Get, Response, Headers } from '@nestjs/common';
+import { Controller, Get, Response, Headers, HttpStatus } from '@nestjs/common';
 import { AppService } from '../../app.service';
 
 import { Response as ExpressResponse } from 'express';
@@ -14,6 +14,6 @@ export class AppController {
     @Response() res: ExpressResponse,
   ) {
     // this.appService.ping();
-    return res.status(401).json({ message: 'pong' });
+    return res.status(HttpStatus.OK).json({ message: 'pong' });
   }
 }

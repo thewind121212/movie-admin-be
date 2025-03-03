@@ -71,6 +71,7 @@ export class refreshAccessTokenGuard implements CanActivate {
         { email, userId },
         '1h',
         'AUTHENTICATION',
+        true
       );
       req.body = {
         ...req.body,
