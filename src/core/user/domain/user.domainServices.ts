@@ -25,17 +25,7 @@ export class UserDomainServices {
     mailOptions?: MailOptions;
   }> {
     try {
-      const [registerRequest, user] = await Promise.all([
-        this.userRepositories.findRegisterRequest(email),
-        this.userRepositories.getUser(email),
-      ]);
-
-      if (user) {
-        return {
-          isError: true,
-          message: 'User already exist',
-        };
-      }
+      const registerRequest = await this.userRepositories.findRegisterRequest(email);
 
       if (!registerRequest) {
         await this.userRepositories.createRegisterRequest({ email });
