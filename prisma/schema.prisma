@@ -56,6 +56,11 @@ model User {
   email     String   @unique
   password  String
   name      String
+  birthDate DateTime? 
+  country   String?
+  timeZone  String?
+  bio       String? 
+  gender    Gender?
   createdAt DateTime @default(now())
   totpSecret String?
   updatedAt DateTime @updatedAt @default(now())
@@ -73,4 +78,11 @@ enum MovieStatus {
   UPLOADED  
   CONVERTING
   COMPLETED
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+  PreferNotToSay
 }

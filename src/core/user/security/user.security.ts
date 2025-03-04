@@ -71,6 +71,7 @@ export class UserSecurity {
   public async verifyJWT(
     token: string,
     purpose: JWT_PURPOSE_TYPE,
+    retriveFromRedis: boolean = true,
   ): Promise<{
     message:
     | 'Token is valid'
@@ -112,20 +113,23 @@ export class UserSecurity {
         };
       }
 
-      const redisToken: { token: string } =
-        await this.userRepositories.getValueFromRedis(`${email}-${purpose}`);
+      if (retriveFromRedis) {
+        const redisToken: { token: string } =
+          await this.userRepositories.getValueFromRedis(`${email}-${purpose}`);
 
-      if (!redisToken) {
-        throw new Error('Token not found in redis');
+        if (!redisToken) {
+          throw new Error('Token not found in redis');
+        }
+
+        if (redisToken.token !== token) {
+          return {
+            email: null,
+            isValid: false,
+            message: 'Invalid token please try again with the latest token',
+          };
+        }
       }
 
-      if (redisToken.token !== token) {
-        return {
-          email: null,
-          isValid: false,
-          message: 'Invalid token please try again with the latest token',
-        };
-      }
 
       return {
         message: 'Token is valid',

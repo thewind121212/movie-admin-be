@@ -23,6 +23,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
 
     const token = request.headers[tokenName.REGISTER_REQUEST];
 
+
     if (!token) {
       throw new HttpException(
         {
@@ -37,6 +38,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
     const { isValid, email, message } = await this.userSecurity.verifyJWT(
       token,
       'REGISTER_REQUEST',
+      false
     );
     if (!isValid) {
       throw new HttpException(
