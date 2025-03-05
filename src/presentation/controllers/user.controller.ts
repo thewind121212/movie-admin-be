@@ -7,6 +7,7 @@ import {
   UseGuards,
   Request,
   Delete,
+  Get,
 } from '@nestjs/common';
 import {
   Response as ExpressResponse,
@@ -28,7 +29,8 @@ import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.
 import { toggleTOTPGuard } from 'src/core/user/guards/toggleTOTP.guard';
 import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
 import { tokenName } from 'src/core/user/user.config';
-import { LogoutGuard } from 'src/core/user/guards/logout.guard';
+import { IsValidAccessTokenGuard } from 'src/core/user/guards/isvalidAccessToken.guard';
+import { getUserGuard } from 'src/core/user/guards/getUser.guard';
 
 @Controller('user')
 export class UserController {
@@ -206,10 +208,20 @@ export class UserController {
 
   @Post('auth/token/verifyAccessToken')
   @UseGuards(verifyAccessTokenGuard)
-  verifyAccessToken(@Response() res: ExpressResponse) {
+  verifyAccessToken(@Response() res: ExpressResponse,
+    @Body() body: {
+      user: {
+        email: string,
+        userId: number,
+      }
+    }
+  ) {
     return res.status(HttpStatus.ACCEPTED).json({
       message: 'Access token is valid',
-      data: null,
+      data: {
+        email: body.user.email,
+        userId: body.user.userId,
+      },
       created_at: new Date(),
     });
   }
@@ -217,12 +229,14 @@ export class UserController {
   @Post('auth/token/refreshAccessToken')
   @UseGuards(refreshAccessTokenGuard)
   refeshAccessToken(
-    @Body() body: { token: string },
+    @Body() body: { token: string, email: string, userId: number },
     @Response() res: ExpressResponse,
   ) {
     return res.status(HttpStatus.CREATED).json({
       message: 'Token is refreshed',
       data: {
+        email: body.email,
+        userId: body.userId,
         newAccessToken: body.token,
       },
       created_at: new Date(),
@@ -289,7 +303,7 @@ export class UserController {
   }
 
   @Delete('auth/logout')
-  @UseGuards(LogoutGuard)
+  @UseGuards(IsValidAccessTokenGuard)
   async logOut(
     @Request() req: ExpressRequest,
     @Response() res: ExpressResponse,
@@ -307,7 +321,29 @@ export class UserController {
 
     return res.status(status).json({ ...response });
   }
+
+
+  @Get('/user:id')
+  @UseGuards(getUserGuard)
+  async getUserProfile(
+    @Request() req: ExpressRequest,
+    @Response() res: ExpressResponse,
+  ) {
+    const { message, status } =
+      await this.userService.logout(req.headers.authorization as string);
+
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date(),
+    };
+
+    return res.status(status).json({ ...response });
+  }
+
 }
+
+
 
 
 

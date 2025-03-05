@@ -59,6 +59,7 @@ export class verifyAccessTokenGuard implements CanActivate {
       );
     }
 
+    req.body.user = verifyResult;
     return true;
   }
 }
