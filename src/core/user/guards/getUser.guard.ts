@@ -8,18 +8,19 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class LogoutGuard implements CanActivate {
+export class getUserGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest();
-        const accessToken = request.headers.authorization;
-        if (!accessToken) {
+        const { userId } = request.params;
+
+        if (!userId) {
             throw new HttpException(
                 {
                     status: 'fail',
                     data: null,
-                    message: 'Access token is required',
+                    message: 'Missing required fields',
                 },
-                HttpStatus.UNAUTHORIZED,
+                HttpStatus.BAD_REQUEST,
             );
         }
 

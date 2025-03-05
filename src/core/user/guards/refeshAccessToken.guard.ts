@@ -10,7 +10,7 @@ import { UserSecurity } from '../security/user.security';
 @Injectable()
 export class refreshAccessTokenGuard implements CanActivate {
   // eslint-disable-next-line no-unused-vars
-  constructor(private readonly userSecurity: UserSecurity) {}
+  constructor(private readonly userSecurity: UserSecurity) { }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const req = context.switchToHttp().getRequest();
@@ -76,6 +76,8 @@ export class refreshAccessTokenGuard implements CanActivate {
       req.body = {
         ...req.body,
         token: newAccessToken,
+        email,
+        userId,
       };
     }
 
