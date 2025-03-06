@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { UserDomainServices } from '../domain/user.domainServices';
+import { UserDomainServices } from '../domain/domainServices/user.domainServices';
 import { NodemailerService } from 'src/Infrastructure/nodemailer/nodemailer.service';
 import { User } from '@prisma/client';
 
