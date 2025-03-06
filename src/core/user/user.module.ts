@@ -8,8 +8,10 @@ import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.se
 import { RegisterRequestGuard } from './guards/registerRequest.guard';
 import { UserSecurity } from './security/user.security';
 import { RedisService } from 'src/Infrastructure/redis/redis.service';
+import { S3Module } from 'src/Infrastructure/s3/s3.module';
 
 @Module({
+  imports: [S3Module],
   controllers: [UserController],
   providers: [
     UserService,

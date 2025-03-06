@@ -3,10 +3,14 @@ import { UserRepositories } from '../repositories/user.repositories';
 import { registerEmailTemplate } from 'src/email-templates/register';
 import { MailOptions } from 'nodemailer/lib/smtp-transport';
 import { UserSecurity } from '../security/user.security';
-import { REGISTER_REQUEST_RETRY_DAY } from '../user.config';
+import { REGISTER_REQUEST_RETRY_DAY, USER_S3_BUCKET } from '../user.config';
 import { DateTime } from 'luxon';
 import crypto from 'bcrypt';
 import { FORGOT_PASS_EXT, LOGIN_EXT } from '../user.config';
+import { S3Service } from 'src/Infrastructure/s3/s3.service';
+import { User } from '@prisma/client';
+import fs from 'fs';
+import path from 'path';
 
 
 @Injectable()
@@ -16,6 +20,8 @@ export class UserDomainServices {
     private readonly userRepositories: UserRepositories,
     // eslint-disable-next-line no-unused-vars
     private readonly userSecurityServices: UserSecurity,
+    // eslint-disable-next-line no-unused-vars
+    private readonly s3Service: S3Service,
   ) { }
 
   async registerRequest(email: string): Promise<{
@@ -668,6 +674,173 @@ export class UserDomainServices {
         isError: true,
         isInternalError: true,
         message: 'Error during logout',
+      };
+    }
+  }
+
+  async getUser(
+    userId: string,
+  ): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+    user?: User;
+  }> {
+    try {
+
+      // get user from database 
+      const userData = await this.userRepositories.getUser('_', userId);
+
+      if (!userData) {
+        return {
+          isError: true,
+          message: 'User not found',
+        };
+      }
+
+
+      //remove sensitive data
+      const userDataClone = { ...userData };
+      delete (userDataClone as Partial<User>).password;
+      delete (userDataClone as Partial<User>).totpSecret;
+
+
+
+
+      return {
+        isError: false,
+        message: 'User retrieved successfully',
+        user: userDataClone,
+      };
+
+    } catch (error) {
+      console.log('Internal Error', error);
+      return {
+        isError: true,
+        isInternalError: true,
+        message: 'Error retrieving user',
+      };
+    }
+  }
+
+
+  async editUser(
+    userId: string, data: {
+      name?: string, birthDate?: Date, gender?: string, country?: string, timeZone?: string, bio?: string
+    }
+  ): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+  }> {
+    try {
+
+      for (const key in data) {
+        if (!data[key]) {
+          delete data[key];
+        }
+      }
+
+
+      // get user from database 
+      const userData = await this.userRepositories.updateUser('_', '_', '_', userId, true, data as User);
+
+      if (!userData) {
+        return {
+          isError: true,
+          message: 'User not found',
+        };
+      }
+
+      return {
+        isError: false,
+        message: 'User retrieved successfully',
+      };
+
+    } catch (error) {
+      console.log('Internal Error', error);
+      return {
+        isError: true,
+        isInternalError: true,
+        message: 'Error retrieving user',
+      };
+    }
+  }
+
+
+  async uploadAvatar(
+    userId: string, avatar: string, name: string
+  ): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+  }> {
+    try {
+      //verify is user exist
+
+      const user = await this.userRepositories.getUser('_', userId);
+
+
+      if (!user) {
+        return {
+          isError: true,
+          message: 'Invalid access token',
+        }
+      }
+
+
+
+
+
+      //perform upload to s3
+
+      const newAvatar = `${user.id}/avatar/avatar${path.extname(name)}`
+      const readStream = fs.createReadStream(avatar)
+      await this.s3Service.upLoadToS3(USER_S3_BUCKET, newAvatar, readStream)
+
+      //clean up old avatar on s3 this will be not efficient if the avatar is large so i run this in background
+      //if the error happen i need cached to redis and crond job to clean up the old avatar
+      this.s3Service.s3.listObjectsV2({
+        Bucket: USER_S3_BUCKET,
+        Prefix: `${user.id}/avatar/`,
+        MaxKeys: 1000
+      }, (err, data) => {
+        if (err) {
+          console.log("Internal Error", err)
+          return
+        }
+        if (!data.Contents) return
+        for (const content of data.Contents) {
+          if (content.Key === newAvatar) continue
+          this.s3Service.s3.deleteObject({
+            Bucket: USER_S3_BUCKET,
+            Key: content.Key!
+          }, (err) => {
+            if (err) {
+              console.log("Internal Error", err)
+              return
+            }
+          })
+          console.log(`Deleted ${content.Key}`)
+        }
+      })
+
+
+
+
+      return {
+        isError: false,
+        message: 'Avatar uploaded successfully',
+      };
+
+
+
+    } catch (error) {
+      console.log('Internal Error', error);
+      return {
+        isError: true,
+        isInternalError: true,
+        message: 'Error uploading user avatar',
       };
     }
   }

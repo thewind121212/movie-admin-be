@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { UserDomainServices } from '../domain/user.domainServices';
 import { NodemailerService } from 'src/Infrastructure/nodemailer/nodemailer.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
@@ -9,7 +10,7 @@ export class UserService {
     private readonly userDomainServices: UserDomainServices,
     // eslint-disable-next-line no-unused-vars
     private readonly mailService: NodemailerService,
-  ) {}
+  ) { }
 
   async registerRequest(email: string): Promise<{
     message: string;
@@ -377,6 +378,7 @@ export class UserService {
     }
   }
 
+
   async logout(accessToken: string): Promise<{
     message: string;
     status: HttpStatus;
@@ -412,4 +414,131 @@ export class UserService {
       };
     }
   }
+
+
+
+  async getUser(userId: string): Promise<{
+    message: string;
+    data: User | null;
+    status: HttpStatus;
+  }> {
+    try {
+      const getUserResult = await this.userDomainServices.getUser(userId);
+
+      if (getUserResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          data: null,
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+      if (getUserResult.isError || !getUserResult.user) {
+        return {
+          message: getUserResult.message,
+          data: null,
+          status: HttpStatus.BAD_REQUEST,
+        };
+      }
+
+      return {
+        message: getUserResult.message,
+        data: getUserResult.user,
+        status: HttpStatus.OK,
+      }
+
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        data: null,
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+  async editUser(userId: string, data: {
+    name?: string, birthDate?: Date, gender?: string, country?: string, timeZone?: string, bio?: string
+  }) : Promise<{
+    message: string;
+    status: HttpStatus;
+  }> {
+
+    try {
+      const getUserResult = await this.userDomainServices.editUser(userId, data);
+
+      if (getUserResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+      if (getUserResult.isError) {
+        return {
+          message: getUserResult.message,
+          status: HttpStatus.BAD_REQUEST,
+        };
+      }
+
+      return {
+        message: getUserResult.message,
+        status: HttpStatus.OK,
+      }
+
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+
+  }
+
+
+  async uploadAvatar(userId: string | undefined, file: string, name : string): Promise<{
+    message: string;
+    status: HttpStatus;
+  }> {
+
+    try {
+      if (!userId) {
+        return {
+          message: 'Access token is required',
+          status: HttpStatus.UNAUTHORIZED,
+        };
+      }
+
+      const getUserResult = await this.userDomainServices.uploadAvatar(userId, file, name);
+
+      if (getUserResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+      if (getUserResult.isError) {
+        return {
+          message: getUserResult.message,
+          status: HttpStatus.BAD_REQUEST,
+        };
+      }
+
+      return {
+        message: getUserResult.message,
+        status: HttpStatus.OK,
+      }
+
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+
+  }
+
 }

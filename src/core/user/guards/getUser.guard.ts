@@ -11,7 +11,7 @@ import {
 export class getUserGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest();
-        const { userId } = request.params;
+        const { userId } = request.body;
 
         if (!userId) {
             throw new HttpException(

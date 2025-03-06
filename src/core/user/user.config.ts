@@ -7,6 +7,7 @@ export type JWT_PURPOSE_TYPE =
 export const USER_PASSWORD_SALT_ROUND = 10;
 export const FORGOT_PASS_EXT = '-FORGOT_PASSWORD';
 export const LOGIN_EXT = '-LOGIN';
+export const USER_S3_BUCKET = 'user';
 
 export const tokenName = {
   REGISTER_REQUEST: 'x-register-token',

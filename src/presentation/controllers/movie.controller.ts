@@ -77,7 +77,6 @@ export class MovieController {
         movileName,
         fileStream,
       );
-      console.log(uploadTicket);
       const uploadResult = await this.movieServices.uploadMovie(
         `${process.env.S3_SERVICE_ENDPOINT}/${RAW_MOVIE_BUCKET}/${movileName}`,
         'video',

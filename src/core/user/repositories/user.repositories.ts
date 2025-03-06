@@ -13,7 +13,7 @@ export class UserRepositories {
     private readonly prisma: PrismaService,
     // eslint-disable-next-line no-unused-vars
     private readonly redis: RedisService,
-  ) {}
+  ) { }
 
   // create register request
   async createRegisterRequest(data: {
@@ -72,12 +72,10 @@ export class UserRepositories {
   }
 
   //find user in user db
-  async getUser(email: string): Promise<User | null> {
+  async getUser(email: string, userId?: string): Promise<User | null> {
     try {
       const user = await this.prisma.user.findUnique({
-        where: {
-          email,
-        },
+        where: userId ? { id: userId } : { email },
       });
       return user;
     } catch (error) {
@@ -113,17 +111,33 @@ export class UserRepositories {
     email: string,
     field: string,
     updateData: any,
+    userId?: string,
+    mutiple?: boolean,
+    mutipleData?: User,
   ): Promise<User | null> {
     try {
+      if (mutiple) {
+        const user = await this.prisma.user.update({
+          where: userId ? { id: userId } : { email },
+          data: {
+            ...mutipleData
+          },
+        });
+        console.log(user)
+        return user
+      }
+
       const user = await this.prisma.user.update({
-        where: {
-          email,
-        },
+        where: userId ? { id: userId } : { email },
         data: {
           [field]: updateData,
         },
       });
+
       return user;
+
+
+
     } catch (error) {
       this.logger.error(error);
       return null;
