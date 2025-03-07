@@ -10,7 +10,6 @@ import { MailOptions } from 'nodemailer/lib/smtp-transport';
 import { REGISTER_REQUEST_RETRY_DAY} from '../../user.config';
 import { registerEmailTemplate } from 'src/email-templates/register';
 import { UserRepositories } from '../../repositories/user.repositories';
-import crypto from 'bcrypt';
 
 export  async function registerRequest(email: string, userRepositories : UserRepositories ): Promise<{
     isError: boolean;
@@ -128,53 +127,6 @@ export function approveRegisterRequest(email: string, userSecurityServices: User
     }
 }
 
-export  async function register(data: {
-    email: string;
-    password: string;
-    token: string;
-    name: string;
-  },
-  userRepositories: UserRepositories,
-): Promise<{
-    isError: boolean;
-    isInternalError?: boolean;
-    message: string;
-    mailOptions?: MailOptions;
-  }> {
-    try {
-      const hashedPassword = await crypto.hash(data.password, 10);
-      await userRepositories.createUser({
-        email: data.email,
-        password: hashedPassword,
-        name: data.name,
-      });
-
-      const emailContent = registerEmailTemplate(
-        'Welcome to our platform!',
-        'You have successfully registered with us. You can now login to your account.',
-      );
-
-      const mailOptions = {
-        from: 'admin@wliafdew.dev',
-        to: data.email,
-        subject: 'Register request',
-        html: emailContent,
-      };
-
-      return {
-        isError: false,
-        message: 'User created successfully',
-        mailOptions,
-      };
-    } catch (error) {
-      console.log('Internal Error', error);
-      return {
-        isError: true,
-        isInternalError: true,
-        message: 'Error create user',
-      };
-    }
-  }
 
 
 
