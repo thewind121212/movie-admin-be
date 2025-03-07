@@ -7,7 +7,6 @@ import {
   UseGuards,
   Request,
   Delete,
-  Get,
 } from '@nestjs/common';
 import {
   Response as ExpressResponse,
@@ -31,11 +30,15 @@ import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
 import { tokenName } from 'src/core/user/user.config';
 import { IsValidAccessTokenGuard } from 'src/core/user/guards/isvalidAccessToken.guard';
 import { getUserGuard } from 'src/core/user/guards/getUser.guard';
+import { editUserGuard } from 'src/core/user/guards/editUserGuard.guard';
+import formidable from 'formidable';
 
 @Controller('user')
 export class UserController {
   // eslint-disable-next-line no-unused-vars
-  constructor(private readonly userService: UserService) { }
+  constructor(private readonly userService: UserService,
+
+  ) { }
 
   @Post('auth/registerRequest/create')
   @UseGuards(RegisterRequestGuard)
@@ -108,11 +111,6 @@ export class UserController {
       created_at: new Date(),
     };
     return res.status(status).json({ ...response });
-    // return res.status(HttpStatus.OK).json({
-    //   message: 'Register request is valid',
-    //   data: { email, password, name },
-    //   created_at: new Date(),
-    // });
   }
 
   @Post('auth/login')
@@ -323,22 +321,99 @@ export class UserController {
   }
 
 
-  @Get('/user:id')
+  @Post('/getUser')
   @UseGuards(getUserGuard)
   async getUserProfile(
-    @Request() req: ExpressRequest,
+    @Body() body: { userId: string },
     @Response() res: ExpressResponse,
   ) {
-    const { message, status } =
-      await this.userService.logout(req.headers.authorization as string);
+    const { message, status, data } = await this.userService.getUser(body.userId);
 
     const response: ResponseType = {
       message,
-      data: null,
+      data: data,
       created_at: new Date(),
     };
 
     return res.status(status).json({ ...response });
+
+  }
+
+
+  @Post('/editUser')
+  @UseGuards(editUserGuard)
+  async editUserProfile(
+    @Body() body: { userId: string, name?: string, birthDate?: Date, gender?: string, country?: string, timeZone?: string, bio?: string },
+    @Response() res: ExpressResponse,
+  ) {
+
+    const assumeData = {
+      name: body.name,
+      birthDate: body.birthDate,
+      gender: body.gender,
+      country: body.country,
+      timeZone: body.timeZone,
+      bio: body.bio,
+    }
+
+    const { message, status } = await this.userService.editUser(body.userId, assumeData);
+
+
+    return res.status(status).json({
+      message,
+      data: null,
+      created_at: new Date
+    });
+
+  }
+
+
+  @Post('/uploadAvatar')
+  uploadUserAvatar(
+    @Body() body: { userId: string },
+    @Response() res: ExpressResponse,
+    @Request() req: ExpressRequest,
+  ) {
+
+    const form = formidable({
+      multiples: false,
+      keepExtensions: true,
+      maxFileSize: 1024 * 1024 * 10, //10Mb
+    });
+
+
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.error('Error parsing file:', err);
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'File upload error' });
+      }
+      if (!files) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'No file uploaded' });
+      }
+
+      const fileArray = files.file as formidable.File[];
+
+      if (!fileArray) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'No file uploaded' });
+      }
+
+      if (!fileArray[0]) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'No file uploaded' });
+      }
+
+      if (!fileArray[0].originalFilename) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'No file name was provide' });
+      }
+
+      if (!fields.userId || !fields.userId[0]) {
+        return res.status(HttpStatus.BAD_REQUEST).json({ message: 'User ID is required' });
+      }
+
+      await this.userService.uploadAvatar(fields.userId[0], fileArray[0].filepath, fileArray[0].originalFilename);
+
+      return res.status(HttpStatus.CREATED).json({ message: 'Avatar uploaded' });
+    });
+
   }
 
 }
