@@ -121,6 +121,7 @@ export  async function verifyTOTP(
     isInternalError?: boolean;
     message: string;
     token?: string;
+    userId?: string;
     refreshToken?: string;
   }> {
     try {
@@ -182,6 +183,7 @@ export  async function verifyTOTP(
         isError: false,
         message: 'Access granted TOTP verified successfully',
         refreshToken: cachingLogin.refreshToken,
+        userId: user.id,
         token: cachingLogin.token,
       };
     } catch (error) {

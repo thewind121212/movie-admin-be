@@ -53,155 +53,158 @@ export async function register(data: {
     }
 }
 
-export async function login(credentials: { email: string; password: string }, userRepositories: UserRepositories, userSecurityServices : UserSecurity): Promise<{
+export async function login(credentials: { email: string; password: string }, userRepositories: UserRepositories, userSecurityServices: UserSecurity): Promise<{
     isError: boolean;
     isInternalError?: boolean;
     token?: string;
     refreshToken?: string;
     message: string;
+    email?: string;
+    userId?: string;
     is2FAEnabled?: boolean;
     twoFAnonce?: string;
-  }> {
+}> {
     try {
-      // is email valid
-      const user = await userRepositories.getUser(credentials.email);
-      if (!user) {
-        return {
-          isError: true,
-          message: 'Invalid password or email',
-        };
-      }
+        // is email valid
+        const user = await userRepositories.getUser(credentials.email);
+        if (!user) {
+            return {
+                isError: true,
+                message: 'Invalid password or email',
+            };
+        }
 
-      //compare password
-      const isPasswordMatch = await crypto.compare(
-        credentials.password,
-        user.password,
-      );
-
-      if (!isPasswordMatch) {
-        return {
-          isError: true,
-          message: 'Invalid password or email',
-        };
-      }
-
-      //after all valid gen access token
-      const token = userSecurityServices.signJWT(
-        { email: credentials.email, userId: user.id },
-        '1h',
-        'AUTHENTICATION',
-        true,
-      );
-      if (!token) {
-        throw new Error('Error signing token');
-      }
-
-      //after gen acces token gen refresh token
-      const refreshToken = userSecurityServices.signJWT(
-        { email: credentials.email, userId: user.id },
-        '7d',
-        'REFRESH',
-        true
-      );
-      if (!refreshToken) {
-        throw new Error('Error signing refresh token');
-      }
-
-      //if 2fa is enable
-      if (user.totpSecret && user.totpSecret !== '') {
-        // generate nonce
-        const nonce = userSecurityServices.genNonce();
-
-        //save nonce to redis
-        const reditsWriteResult = await userRepositories.writeToRedis(
-          `${user.id}${LOGIN_EXT}`,
-          JSON.stringify({
-            token,
-            nonce,
-            refreshToken,
-          }),
-          '15m',
+        //compare password
+        const isPasswordMatch = await crypto.compare(
+            credentials.password,
+            user.password,
         );
 
-        if (!reditsWriteResult) {
-          throw new Error('Error writing nonce');
+        if (!isPasswordMatch) {
+            return {
+                isError: true,
+                message: 'Invalid password or email',
+            };
+        }
+
+        //after all valid gen access token
+        const token = userSecurityServices.signJWT(
+            { email: credentials.email, userId: user.id },
+            '1h',
+            'AUTHENTICATION',
+            true,
+        );
+        if (!token) {
+            throw new Error('Error signing token');
+        }
+
+        //after gen acces token gen refresh token
+        const refreshToken = userSecurityServices.signJWT(
+            { email: credentials.email, userId: user.id },
+            '7d',
+            'REFRESH',
+            true
+        );
+        if (!refreshToken) {
+            throw new Error('Error signing refresh token');
+        }
+
+        //if 2fa is enable
+        if (user.totpSecret && user.totpSecret !== '') {
+            // generate nonce
+            const nonce = userSecurityServices.genNonce();
+
+            //save nonce to redis
+            const reditsWriteResult = await userRepositories.writeToRedis(
+                `${user.id}${LOGIN_EXT}`,
+                JSON.stringify({
+                    token,
+                    nonce,
+                    refreshToken,
+                }),
+                '15m',
+            );
+
+            if (!reditsWriteResult) {
+                throw new Error('Error writing nonce');
+            }
+
+            return {
+                isError: false,
+                message: 'User need to verify TOTP',
+                is2FAEnabled: true,
+                twoFAnonce: nonce,
+            };
         }
 
         return {
-          isError: false,
-          message: 'User need to verify TOTP',
-          is2FAEnabled: true,
-          twoFAnonce: nonce,
+            isError: false,
+            message: 'User logged in successfully',
+            token,
+            userId: user.id,
+            refreshToken,
         };
-      }
-
-      return {
-        isError: false,
-        message: 'User logged in successfully',
-        token,
-        refreshToken,
-      };
     } catch (error) {
-      console.log('Internal Error', error);
-      return {
-        isError: true,
-        isInternalError: true,
-        message: 'Error login',
-      };
+        console.log('Internal Error', error);
+        return {
+            isError: true,
+            isInternalError: true,
+            message: 'Error login',
+        };
     }
-  }
+}
 
-export   async function logout(
+export async function logout(
     accessToken: string,
     userRepositories: UserRepositories,
     userSecurityServices: UserSecurity
-  ): Promise<{
+): Promise<{
     isError: boolean;
     isInternalError?: boolean;
     message: string;
-  }> {
+}> {
     try {
-      //verify access token
+        //verify access token
 
-      const verifyAccessTokenResult = await userSecurityServices.verifyJWT(
-        accessToken,
-        'AUTHENTICATION'
-      )
+        const verifyAccessTokenResult = await userSecurityServices.verifyJWT(
+            accessToken,
+            'AUTHENTICATION'
+        )
 
-      if (!verifyAccessTokenResult.isValid) {
-        return {
-          isError: true,
-          message: 'Invalid access token',
+        if (!verifyAccessTokenResult.isValid) {
+            return {
+                isError: true,
+                message: 'Invalid access token',
+            }
         }
-      }
 
-      //invalid refresh token from redis
-      const invalidResult = await userRepositories.removeKey(
-        `${verifyAccessTokenResult.email}-REFRESH`
-      )
+        //invalid refresh token from redis
+        const invalidResult = await userRepositories.removeKey(
+            `${verifyAccessTokenResult.email}-REFRESH`
+        )
 
-      //invalid access token from redis
-      const invalidAccessToken = await userRepositories.removeKey(
-        `${verifyAccessTokenResult.email}-AUTHENTICATION`
-      )
+        //invalid access token from redis
+        const invalidAccessToken = await userRepositories.removeKey(
+            `${verifyAccessTokenResult.email}-AUTHENTICATION`
+        )
 
-      if (!invalidResult || !invalidAccessToken) {
-        throw new Error('Error removing refresh token')
-      }
+        if (!invalidResult || !invalidAccessToken) {
+            throw new Error('Error removing refresh token')
+        }
 
-      // all process success
-      return {
-        isError: false,
-        message: 'Logout successfully',
-      };
+        // all process success
+        return {
+            isError: false,
+            message: 'Logout successfully',
+        };
 
     } catch (error) {
-      console.log('Internal Error', error);
-      return {
-        isError: true,
-        isInternalError: true,
-        message: 'Error during logout',
-      };
+        console.log('Internal Error', error);
+        return {
+            isError: true,
+            isInternalError: true,
+            message: 'Error during logout',
+        };
     }
-  }
+}
 

@@ -61,6 +61,7 @@ export class UserDomainServices {
     isError: boolean;
     isInternalError?: boolean;
     token?: string;
+    userId?: string;
     refreshToken?: string;
     message: string;
     is2FAEnabled?: boolean;
@@ -142,6 +143,7 @@ export class UserDomainServices {
     isInternalError?: boolean;
     message: string;
     token?: string;
+    userId?: string;
     refreshToken?: string;
   }> {
     return await verifyTOTP(email, token, nonce, this.userRepositories, this.userSecurityServices)

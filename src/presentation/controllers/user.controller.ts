@@ -7,6 +7,7 @@ import {
   UseGuards,
   Request,
   Delete,
+  Put,
 } from '@nestjs/common';
 import {
   Response as ExpressResponse,
@@ -121,7 +122,7 @@ export class UserController {
   ) {
     const credential = body;
 
-    const { status, message, token, refreshToken, twoFAnonce } =
+    const { status, message, token, refreshToken, twoFAnonce, userId } =
       await this.userService.login(credential);
     const response: ResponseType = {
       message,
@@ -141,7 +142,7 @@ export class UserController {
     if (status === HttpStatus.OK) {
       return res
         .status(status)
-        .json({ ...response, data: { token, refreshToken } });
+        .json({ ...response, data: { token, refreshToken, userId } });
     } else if (status === HttpStatus.CREATED) {
       return res.status(status).json({
         ...response,
@@ -280,12 +281,12 @@ export class UserController {
   @Post('auth/2FA/verifyTOTP')
   @UseGuards(verifyTOTPGuard)
   async verifyTOTP(
-    @Body() body: { token: string; email: string; nonce: string },
+    @Body() body: { token: string; email: string},
     @Request() req: ExpressRequest,
     @Response() res: ExpressResponse,
   ) {
     const nonce = req.headers[tokenName.NONCE_2FA] as string;
-    const { status, message, token, refreshToken } =
+    const { status, message, token, refreshToken, userId } =
       await this.userService.verifyTOTP(body.email, body.token, nonce);
     const response: ResponseType = {
       message,
@@ -294,7 +295,7 @@ export class UserController {
     };
 
     if (token && refreshToken) {
-      response.data = { token, refreshToken };
+      response.data = { token, refreshToken, userId };
     }
 
     return res.status(status).json({ ...response });
@@ -340,7 +341,7 @@ export class UserController {
   }
 
 
-  @Post('/editUser')
+  @Put('/editUser')
   @UseGuards(editUserGuard)
   async editUserProfile(
     @Body() body: { userId: string, name?: string, birthDate?: Date, gender?: string, country?: string, timeZone?: string, bio?: string },
