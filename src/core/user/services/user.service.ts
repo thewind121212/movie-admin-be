@@ -125,12 +125,15 @@ export class UserService {
   async login(credentials: { email: string; password: string }): Promise<{
     message: string;
     status: HttpStatus;
+    userId?: string,
+    email?: string;
     twoFAnonce?: string;
     token?: string;
     refreshToken?: string;
   }> {
     try {
       const loginResult = await this.userDomainServices.login(credentials);
+      console.log(loginResult)
 
       if (loginResult.isInternalError) {
         return {
@@ -157,6 +160,7 @@ export class UserService {
       return {
         message: loginResult.message,
         token: loginResult.token,
+        userId: loginResult.userId,
         refreshToken: loginResult.refreshToken,
         status: HttpStatus.OK,
       };
@@ -340,6 +344,7 @@ export class UserService {
     message: string;
     status: HttpStatus;
     token?: string;
+    userId?: string;
     refreshToken?: string;
   }> {
     try {
@@ -367,6 +372,7 @@ export class UserService {
         message: enableTOTPResult.message,
         token: enableTOTPResult.token,
         refreshToken: enableTOTPResult.refreshToken,
+        userId: enableTOTPResult.userId,
         status: HttpStatus.OK,
       };
     } catch (error) {
@@ -443,7 +449,9 @@ export class UserService {
 
       return {
         message: getUserResult.message,
-        data: getUserResult.user,
+        data: {
+          ...getUserResult.user,
+        },
         status: HttpStatus.OK,
       }
 
@@ -459,7 +467,7 @@ export class UserService {
 
   async editUser(userId: string, data: {
     name?: string, birthDate?: Date, gender?: string, country?: string, timeZone?: string, bio?: string
-  }) : Promise<{
+  }): Promise<{
     message: string;
     status: HttpStatus;
   }> {
@@ -497,7 +505,7 @@ export class UserService {
   }
 
 
-  async uploadAvatar(userId: string | undefined, file: string, name : string): Promise<{
+  async uploadAvatar(userId: string | undefined, file: string, name: string): Promise<{
     message: string;
     status: HttpStatus;
   }> {
