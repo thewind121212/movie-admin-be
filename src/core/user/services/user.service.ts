@@ -520,6 +520,7 @@ export class UserService {
 
       const getUserResult = await this.userDomainServices.uploadAvatar(userId, file, name);
 
+
       if (getUserResult.isInternalError) {
         return {
           message: 'Internal server error',
