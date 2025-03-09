@@ -64,6 +64,7 @@ model User {
   createdAt DateTime @default(now())
   totpSecret String?
   updatedAt DateTime @updatedAt @default(now())
+  avatarUrl String?
 }
 
 model RegistrationRequests {

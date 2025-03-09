@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as AWS from 'aws-sdk';
 import { ReadStream } from 'fs';
 import { scanFolder } from 'src/core/movie/movie.utils';
+import { USER_S3_BUCKET } from 'src/core/user/user.config';
 
 @Injectable()
 export class S3Service {
@@ -18,6 +19,7 @@ export class S3Service {
   ) {
     void scanFolder(folderPath, this.s3Client, filename);
   }
+
 
   removePathFromS3(bucketName: string, key: string) {
     const params = {
@@ -45,6 +47,28 @@ export class S3Service {
       return s3Response;
     } catch (e) {
       console.log(e);
+    }
+  }
+
+
+  async getAvatar ( userId: string): Promise<Buffer | null> {
+    const params = {
+      Bucket: USER_S3_BUCKET,
+      Key: `${userId}/avatar/avatar.png`,
+    };
+
+    try {
+      const s3Response = await this.s3Client.getObject(params).promise();
+
+      // create a buffer from the stream
+
+      const buffer = Buffer.from(s3Response.Body as ArrayBuffer);
+
+      return buffer
+
+    } catch (e) {
+      console.log(e)
+      return null
     }
   }
 }
