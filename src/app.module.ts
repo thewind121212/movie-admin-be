@@ -10,9 +10,10 @@ import { UserSecurity } from './core/user/security/user.security';
 import { UserRepositories } from './core/user/repositories/user.repositories';
 import { RedisService } from './Infrastructure/redis/redis.service';
 import { PrismaService } from './Infrastructure/prisma-client/prisma-client.service';
+import { S3Module } from './Infrastructure/s3/s3.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), MovieModule, GenreModule, UserModule],
+  imports: [ConfigModule.forRoot(), MovieModule, GenreModule, UserModule, S3Module],
   controllers: [AppController],
   providers: [
     AppService,
@@ -23,4 +24,4 @@ import { PrismaService } from './Infrastructure/prisma-client/prisma-client.serv
     RedisService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

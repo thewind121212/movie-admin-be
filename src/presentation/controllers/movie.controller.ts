@@ -66,7 +66,6 @@ export class MovieController {
       }
 
       const fileStream = fs.createReadStream(fileArray[0].filepath);
-      // console.log(fileStream)
 
       const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
       const extName = path.extname(fileArray[0].originalFilename);
