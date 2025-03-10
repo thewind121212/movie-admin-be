@@ -253,16 +253,17 @@ export class UserService {
     }
   }
 
-  async enableTOTP(
+  async requestEnableTOTP(
     email: string,
     password: string,
   ): Promise<{
     message: string;
     status: HttpStatus;
     qrCodeImageURL?: string;
+    recoveryCodes?: string[];
   }> {
     try {
-      const enableTOTPResult = await this.userDomainServices.enableTOTP(
+      const enableTOTPResult = await this.userDomainServices.requestEnableTOTP(
         email,
         password,
       );
@@ -281,9 +282,11 @@ export class UserService {
         };
       }
 
+
       return {
         message: enableTOTPResult.message,
         status: HttpStatus.CREATED,
+        recoveryCodes: enableTOTPResult.recoveryCodes,
         qrCodeImageURL: enableTOTPResult.qrCodeImageURL,
       };
     } catch (error) {
@@ -294,7 +297,6 @@ export class UserService {
       };
     }
   }
-
 
 
   async changePassword(payload: { currentPassword: string, newPassword : string ,userId:string }): Promise<{
@@ -340,17 +342,60 @@ export class UserService {
 
 
   async disableTOTP(
-    email: string,
-    password: string,
+    userId: string,
+    token: string,
+    removeMethod: 'token' | 'recoveryPass'
   ): Promise<{
     message: string;
     status: HttpStatus;
-    qrCodeImageURL?: string;
   }> {
     try {
       const enableTOTPResult = await this.userDomainServices.disableTOTP(
-        email,
-        password,
+        userId,
+        token,
+        removeMethod,
+      );
+
+      if (enableTOTPResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+      if (enableTOTPResult.isError) {
+        return {
+          message: enableTOTPResult.message,
+          status: HttpStatus.BAD_REQUEST,
+        };
+      }
+
+      return {
+        message: enableTOTPResult.message,
+        status: HttpStatus.OK,
+      };
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+
+
+  async enableTOTP(
+    userId: string,
+    token: string,
+  ): Promise<{
+    message: string;
+    status: HttpStatus;
+  }> {
+    try {
+      const enableTOTPResult = await this.userDomainServices.enableTOTP(
+        userId,
+        token,
       );
 
       if (enableTOTPResult.isInternalError) {

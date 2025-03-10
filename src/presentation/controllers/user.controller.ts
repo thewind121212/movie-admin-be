@@ -26,7 +26,7 @@ import { VerifyResetLinkGuard } from 'src/core/user/guards/verifyResetLink.guard
 import { SubmitForgotPassGuard } from 'src/core/user/guards/submitForgotPassword.guard';
 import { verifyAccessTokenGuard } from 'src/core/user/guards/verifyAccessToken.guard';
 import { refreshAccessTokenGuard } from 'src/core/user/guards/refeshAccessToken.guard';
-import { toggleTOTPGuard } from 'src/core/user/guards/toggleTOTP.guard';
+import { requestTOTPGuard } from 'src/core/user/guards/requestTOTP.guard';
 import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
 import { tokenName } from 'src/core/user/user.config';
 import { IsValidAccessTokenGuard } from 'src/core/user/guards/isvalidAccessToken.guard';
@@ -34,6 +34,8 @@ import { getUserGuard } from 'src/core/user/guards/getUser.guard';
 import { editUserGuard } from 'src/core/user/guards/editUserGuard.guard';
 import formidable from 'formidable';
 import { ChangePassGuard } from 'src/core/user/guards/changePassword.guard';
+import { enableTOTPGuard } from 'src/core/user/guards/enableTOTP.guard';
+import { disableTOTPGuard } from 'src/core/user/guards/disableTOTP.guard';
 
 @Controller('user')
 export class UserController {
@@ -158,7 +160,7 @@ export class UserController {
   @Put('auth/changePassword')
   @UseGuards(ChangePassGuard)
   async changePassword(
-    @Body() body: { currentPassword: string , newPassword: string, userId: string },
+    @Body() body: { currentPassword: string, newPassword: string, userId: string },
     @Response() res: ExpressResponse,
   ) {
     const { currentPassword, newPassword, userId } = body;
@@ -266,17 +268,18 @@ export class UserController {
     });
   }
 
-  @Post('auth/2FA/enableTOTP')
-  @UseGuards(toggleTOTPGuard)
-  async enableTOTP(
+  @Post('auth/2FA/requestEnableTOTP')
+  @UseGuards(requestTOTPGuard)
+  async requesetEnableTOTP(
     @Body() body: { email: string; password: string },
     @Response() res: ExpressResponse,
   ) {
-    const { status, message, qrCodeImageURL } =
-      await this.userService.enableTOTP(body.email, body.password);
+    const { status, message, qrCodeImageURL, recoveryCodes } =
+      await this.userService.requestEnableTOTP(body.email, body.password);
     const response: ResponseType = {
       message,
       data: {
+        recoveryCodes: recoveryCodes ? recoveryCodes : null,
         qrCodeImageURL: qrCodeImageURL ? qrCodeImageURL : null,
       },
       created_at: new Date(),
@@ -284,15 +287,34 @@ export class UserController {
     return res.status(status).json({ ...response });
   }
 
-  @Post('auth/2FA/disableTOTP')
-  @UseGuards(toggleTOTPGuard)
-  async disableTOTP(
-    @Body() body: { email: string; password: string },
+
+  @Post('auth/2FA/enableTOTP')
+  @UseGuards(enableTOTPGuard)
+  async enableTOTP(
+    @Body() body: { userId: string; token: string },
     @Response() res: ExpressResponse,
   ) {
+    const { status, message } =
+      await this.userService.enableTOTP(body.userId, body.token);
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date(),
+    };
+    return res.status(status).json({ ...response });
+  }
+
+  @Post('auth/2FA/disableTOTP')
+  @UseGuards(disableTOTPGuard)
+  async disableTOTP(
+    @Body() body: { userId: string; token: string, removeMethod: 'token' | 'recoveryPass' },
+    @Response() res: ExpressResponse,
+  ) {
+
     const { status, message } = await this.userService.disableTOTP(
-      body.email,
-      body.password,
+      body.userId,
+      body.token,
+      body.removeMethod,
     );
     const response: ResponseType = {
       message,
@@ -305,7 +327,7 @@ export class UserController {
   @Post('auth/2FA/verifyTOTP')
   @UseGuards(verifyTOTPGuard)
   async verifyTOTP(
-    @Body() body: { token: string; email: string},
+    @Body() body: { token: string; email: string },
     @Request() req: ExpressRequest,
     @Response() res: ExpressResponse,
   ) {

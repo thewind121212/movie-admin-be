@@ -64,6 +64,8 @@ model User {
   createdAt DateTime @default(now())
   totpSecret String?
   updatedAt DateTime @updatedAt @default(now())
+  twoFaStatus twoFaStatus @default(DISABLED)
+  recoveryCode String?
   avatarUrl String?
 }
 
@@ -86,4 +88,9 @@ enum Gender {
   Female
   Other
   PreferNotToSay
+}
+
+enum twoFaStatus {
+  ENABLED
+  DISABLED
 }

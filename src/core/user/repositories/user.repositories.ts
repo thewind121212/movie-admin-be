@@ -123,7 +123,6 @@ export class UserRepositories {
             ...mutipleData
           },
         });
-        console.log(user)
         return user
       }
 

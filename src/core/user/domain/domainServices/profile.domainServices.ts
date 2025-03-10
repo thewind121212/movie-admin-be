@@ -34,7 +34,6 @@ export async function getUser(
 
 
 
-
     return {
       isError: false,
       message: 'User retrieved successfully',
