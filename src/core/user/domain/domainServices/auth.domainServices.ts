@@ -2,7 +2,7 @@ import { UserRepositories } from "../../repositories/user.repositories";
 import crypto from 'bcrypt';
 import { MailOptions } from 'nodemailer/lib/smtp-transport';
 import { registerEmailTemplate } from 'src/email-templates/register';
-import { LOGIN_EXT } from "../../user.config";
+import { LOGIN_EXT, USER_PASSWORD_SALT_ROUND } from "../../user.config";
 import { UserSecurity } from "../../security/user.security";
 
 export async function register(data: {
@@ -207,4 +207,83 @@ export async function logout(
         };
     }
 }
+
+
+export async function changePassword(payload: {
+    userId: string;
+    currentPassword: string;
+    newPassword: string;
+  },
+  userRepositories: UserRepositories,
+): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+    mailOptions?: MailOptions;
+  }> {
+
+
+    try {
+      // get user from database
+
+      const user = await userRepositories.getUser('_', payload.userId);
+      if (!user) {
+        return {
+          isError: true,
+          message: 'User not found',
+        };
+      }
+
+      //compare old password
+      const isPasswordMatch = await crypto.compare(
+        payload.currentPassword,
+        user.password,
+      );
+
+      if (!isPasswordMatch) {
+        return {
+          isError: true,
+          message: 'Invalid password',
+        };
+      }
+
+      //hash new password
+      payload.newPassword = await crypto.hash(payload.newPassword, USER_PASSWORD_SALT_ROUND );
+
+      //update password
+      await userRepositories.updateUser(user.email, 'password', payload.newPassword);
+
+
+      const emailContent = registerEmailTemplate(
+        'Password changed!',
+        `You have successfully changed your password at ${new Date().toISOString().split('T')[0]} . If you did not perform this action, please contact us immediately.`,
+      );
+
+
+        const mailOptions = {
+            from: 'admin@wliafdew.dev',
+            to: user.email,
+            subject: 'Register request',
+            html: emailContent,
+        };
+
+
+      return {
+        isError: false,
+        message: 'Change password successfully',
+        mailOptions,
+      }
+
+
+
+    } catch (error) {
+      console.log('Internal Error', error);
+      return {
+        isError: true,
+        isInternalError: true,
+        message: 'Error change password',
+      };
+
+    }
+  }
 

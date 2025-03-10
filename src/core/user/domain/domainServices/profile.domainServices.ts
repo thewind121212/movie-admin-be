@@ -34,7 +34,6 @@ export async function getUser(
 
 
 
-
     return {
       isError: false,
       message: 'User retrieved successfully',
@@ -83,7 +82,7 @@ export async function editUser(
 
     return {
       isError: false,
-      message: 'User retrieved successfully',
+      message: 'Edit user successfully',
     };
 
   } catch (error) {
@@ -91,7 +90,7 @@ export async function editUser(
     return {
       isError: true,
       isInternalError: true,
-      message: 'Error retrieving user',
+      message: 'Error edditing user',
     };
   }
 }

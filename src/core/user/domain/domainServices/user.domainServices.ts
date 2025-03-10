@@ -6,8 +6,8 @@ import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import { User } from '@prisma/client';
 import { approveRegisterRequest, registerRequest } from './requestRegister.domainServices';
 import { forgotPassword, submitForgotPassword } from './forgotPass.domainServices'
-import { login, logout, register } from './auth.domainServices'
-import { verifyTOTP, enableTOTP, disableTOTP } from './2fa.domainServices'
+import { login, logout, register, changePassword } from './auth.domainServices'
+import { verifyTOTP, requestEnableTOTP, disableTOTP, enableTOTP } from './2fa.domainServices'
 import { getUser, editUser, uploadAvatar } from './profile.domainServices'
 
 
@@ -57,6 +57,23 @@ export class UserDomainServices {
     return await register(data, this.userRepositories)
   }
 
+
+
+
+  async changePassword(payload: {
+    userId: string;
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+    mailOptions?: MailOptions;
+  }> {
+    return await changePassword(payload, this.userRepositories)
+  }
+
+
   async login(credentials: { email: string; password: string }): Promise<{
     isError: boolean;
     isInternalError?: boolean;
@@ -81,6 +98,8 @@ export class UserDomainServices {
   }> {
     return await logout(accessToken, this.userRepositories, this.userSecurityServices)
   }
+
+
 
 
   // Perform forgot password
@@ -111,27 +130,42 @@ export class UserDomainServices {
 
 
   // Perform 2FA totp
-  async enableTOTP(
+  async requestEnableTOTP(
     email: string,
     password: string,
   ): Promise<{
     isError: boolean;
     isInternalError?: boolean;
     message: string;
+    recoveryCodes?: string[];
     qrCodeImageURL?: string;
   }> {
-    return await enableTOTP(email, password, this.userRepositories, this.userSecurityServices)
+    return await requestEnableTOTP(email, password, this.userRepositories, this.userSecurityServices)
+  }
+
+
+  // Perform 2FA totp
+  async enableTOTP(
+    userId: string,
+    token: string,
+  ): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+  }> {
+    return await enableTOTP(userId, token, this.userRepositories, this.userSecurityServices)
   }
 
   async disableTOTP(
-    email: string,
-    password: string,
+    userId: string,
+    token: string,
+    removeMethod: 'token' | 'recoveryPass'
   ): Promise<{
     isError: boolean;
     isInternalError?: boolean;
     message: string;
   }> {
-    return await disableTOTP(email, password, this.userRepositories)
+    return await disableTOTP(userId, token, removeMethod ,this.userRepositories, this.userSecurityServices)
   }
 
   async verifyTOTP(

@@ -1,3 +1,4 @@
+
 import {
   Injectable,
   CanActivate,
@@ -7,11 +8,11 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class toggleTOTPGuard implements CanActivate {
+export class enableTOTPGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    const { email, password } = request.body;
-    if (!email || !password) {
+    const { userId, token } = request.body;
+    if (!userId || !token) {
       throw new HttpException(
         {
           status: 'fail',

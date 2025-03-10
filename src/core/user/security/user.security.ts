@@ -3,11 +3,11 @@ import { RegisterRequestJWTPayloadType } from '../type/User.type';
 import { UserRepositories } from '../repositories/user.repositories';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import otpauth from 'otpauth';
 import ms from 'ms';
 import qr from 'qrcode';
-import { JWT_PURPOSE_TYPE } from '../user.config';
-import { User } from '@prisma/client';
+import { JWT_PURPOSE_TYPE, RECOVERY_CODE_SALT_ROUND } from '../user.config';
 
 @Injectable()
 export class UserSecurity {
@@ -168,10 +168,11 @@ export class UserSecurity {
 
   // generate OTP
 
-  public async generateOTP(email: string): Promise<{
+  public async generateTOTP(email: string): Promise<{
     qrCodeImageURL?: string;
     isError: boolean;
     isInterNalError: boolean;
+    secret?: string;
     message: string;
   }> {
     try {
@@ -188,15 +189,13 @@ export class UserSecurity {
         secret: secret,
       });
 
-      // save secret to db
-      void this.userRepositories.updateUser(email, 'totpSecret', secret);
-
       const qrCode = await qr.toDataURL(totp.toString());
 
       return {
         isError: false,
         isInterNalError: false,
         message: 'OTP generated',
+        secret,
         qrCodeImageURL: qrCode,
       };
     } catch (error) {
@@ -211,31 +210,24 @@ export class UserSecurity {
 
   // verify OTP
 
-  public verifyOTP(
+  public verifyTOTP(
     email: string,
     token: string,
-    user: User,
+    serect: string,
   ): {
     isInterNalError: boolean;
     isError: boolean;
     message: string;
   } {
     try {
-      if (!user) {
+      if (!serect) {
         return {
           isError: true,
-          message: 'User not found',
+          message: 'Secret is required',
           isInterNalError: false,
         };
       }
 
-      if (!user.totpSecret) {
-        return {
-          isError: true,
-          message: 'User does not have 2FA TOTP enable',
-          isInterNalError: false,
-        };
-      }
 
       const totp = new otpauth.TOTP({
         issuer: 'Wliafdew Movie Uploader',
@@ -243,7 +235,7 @@ export class UserSecurity {
         algorithm: 'SHA256',
         digits: 6,
         period: 30,
-        secret: user.totpSecret,
+        secret: serect,
       });
 
       const isValid = totp.validate({ token, window: 1 });
@@ -275,4 +267,67 @@ export class UserSecurity {
     const nonce = crypto.randomBytes(16).toString('base64');
     return nonce;
   }
+
+  public generateMutiRecoveryCodes(amount: number): {
+    rawPass: string[];
+    hashedPass: string[];
+  } {
+    const hashedPass: string[] = [];
+    const rawPass: string[] = [];
+    for (let i = 0; i < amount; i++) {
+      const pass = this.generateRecoveryCode();
+      const passHashed = bcrypt.hashSync(pass, RECOVERY_CODE_SALT_ROUND);
+      rawPass.push(pass);
+      hashedPass.push(passHashed)
+    }
+    return {
+      rawPass,
+      hashedPass,
+    };
+
+  }
+  generateRecoveryCode(length = 8) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'; 
+    let recoveryCode = '';
+
+    for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * characters.length);
+        recoveryCode += characters[randomIndex];
+    }
+
+    return recoveryCode;
 }
+
+
+  public encryptAES256(data: string): string {
+    // using ebc so dont need iv
+    const key = process.env.AES_KEY;
+    const iv = process.env.AES_IV;
+    if (!key || !iv) {
+      this.logger.error('AES_KEY is not defined or invalid');
+      process.exit(1);
+    }
+
+    const cipher = crypto.createCipheriv('aes-256-cbc', key.substring(0, 32), iv.substring(0, 16));
+    let encrypted = cipher.update(data, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    return encrypted;
+  }
+
+
+  public decryptAES256(data: string): string {
+    const key = process.env.AES_KEY;
+    const iv = process.env.AES_IV;
+    if (!key || !iv) {
+      this.logger.error('AES_KEY is not defined or invalid');
+      process.exit(1);
+    }
+
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key.substring(0, 32), iv.substring(0, 16));
+    let decrypted = decipher.update(data, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+
+  }
+}
+
