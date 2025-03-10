@@ -211,7 +211,7 @@ export async function logout(
 
 export async function changePassword(payload: {
     userId: string;
-    oldPassword: string;
+    currentPassword: string;
     newPassword: string;
   },
   userRepositories: UserRepositories,
@@ -236,7 +236,7 @@ export async function changePassword(payload: {
 
       //compare old password
       const isPasswordMatch = await crypto.compare(
-        payload.oldPassword,
+        payload.currentPassword,
         user.password,
       );
 

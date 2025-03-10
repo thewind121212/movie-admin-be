@@ -62,7 +62,7 @@ export class UserDomainServices {
 
   async changePassword(payload: {
     userId: string;
-    oldPassword: string;
+    currentPassword: string;
     newPassword: string;
   }): Promise<{
     isError: boolean;

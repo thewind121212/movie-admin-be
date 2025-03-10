@@ -297,7 +297,7 @@ export class UserService {
 
 
 
-  async changePassword(payload: { oldPassword: string, newPassword : string ,userId:string }): Promise<{
+  async changePassword(payload: { currentPassword: string, newPassword : string ,userId:string }): Promise<{
     message: string;
     status: HttpStatus;
   }> {

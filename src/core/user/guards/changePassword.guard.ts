@@ -12,9 +12,9 @@ import {
 export class ChangePassGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest();
-        const { oldPassword, newPassword, userId } = request.body;
+        const { currentPassword, newPassword, userId } = request.body;
 
-        if (!userId || !oldPassword || !newPassword) {
+        if (!userId || !currentPassword || !newPassword) {
             throw new HttpException(
                 {
                     status: 'fail',

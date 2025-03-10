@@ -158,12 +158,12 @@ export class UserController {
   @Put('auth/changePassword')
   @UseGuards(ChangePassGuard)
   async changePassword(
-    @Body() body: { oldPassword: string , newPassword: string, userId: string },
+    @Body() body: { currentPassword: string , newPassword: string, userId: string },
     @Response() res: ExpressResponse,
   ) {
-    const { oldPassword, newPassword, userId } = body;
+    const { currentPassword, newPassword, userId } = body;
     const { status, message } = await this.userService.changePassword({
-      oldPassword,
+      currentPassword,
       newPassword,
       userId,
     });
