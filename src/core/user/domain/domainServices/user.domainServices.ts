@@ -6,7 +6,7 @@ import { S3Service } from 'src/Infrastructure/s3/s3.service';
 import { User } from '@prisma/client';
 import { approveRegisterRequest, registerRequest } from './requestRegister.domainServices';
 import { forgotPassword, submitForgotPassword } from './forgotPass.domainServices'
-import { login, logout, register } from './auth.domainServices'
+import { login, logout, register, changePassword } from './auth.domainServices'
 import { verifyTOTP, enableTOTP, disableTOTP } from './2fa.domainServices'
 import { getUser, editUser, uploadAvatar } from './profile.domainServices'
 
@@ -57,6 +57,23 @@ export class UserDomainServices {
     return await register(data, this.userRepositories)
   }
 
+
+
+
+  async changePassword(payload: {
+    userId: string;
+    oldPassword: string;
+    newPassword: string;
+  }): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+    mailOptions?: MailOptions;
+  }> {
+    return await changePassword(payload, this.userRepositories)
+  }
+
+
   async login(credentials: { email: string; password: string }): Promise<{
     isError: boolean;
     isInternalError?: boolean;
@@ -81,6 +98,8 @@ export class UserDomainServices {
   }> {
     return await logout(accessToken, this.userRepositories, this.userSecurityServices)
   }
+
+
 
 
   // Perform forgot password

@@ -295,6 +295,50 @@ export class UserService {
     }
   }
 
+
+
+  async changePassword(payload: { oldPassword: string, newPassword : string ,userId:string }): Promise<{
+    message: string;
+    status: HttpStatus;
+  }> {
+    try {
+      const changePasswordResult =
+        await this.userDomainServices.changePassword(payload);
+
+      if (changePasswordResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+      if (changePasswordResult.isError) {
+        return {
+          message: changePasswordResult.message,
+          status: HttpStatus.BAD_REQUEST,
+        };
+      }
+
+      void this.mailService.nodemailer.sendMail(
+        changePasswordResult.mailOptions!,
+      );
+
+      return {
+        message: 'Password changed successfully',
+        status: HttpStatus.OK,
+      };
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+  }
+
+
+
+
   async disableTOTP(
     email: string,
     password: string,

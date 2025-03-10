@@ -33,6 +33,7 @@ import { IsValidAccessTokenGuard } from 'src/core/user/guards/isvalidAccessToken
 import { getUserGuard } from 'src/core/user/guards/getUser.guard';
 import { editUserGuard } from 'src/core/user/guards/editUserGuard.guard';
 import formidable from 'formidable';
+import { ChangePassGuard } from 'src/core/user/guards/changePassword.guard';
 
 @Controller('user')
 export class UserController {
@@ -153,6 +154,27 @@ export class UserController {
     }
   }
 
+
+  @Put('auth/changePassword')
+  @UseGuards(ChangePassGuard)
+  async changePassword(
+    @Body() body: { oldPassword: string , newPassword: string, userId: string },
+    @Response() res: ExpressResponse,
+  ) {
+    const { oldPassword, newPassword, userId } = body;
+    const { status, message } = await this.userService.changePassword({
+      oldPassword,
+      newPassword,
+      userId,
+    });
+    const response: ResponseType = {
+      message,
+      data: null,
+      created_at: new Date(),
+    };
+    return res.status(status).json({ ...response });
+  }
+
   @Post('auth/forgot/request')
   @UseGuards(ForgotPasswordGuard)
   async requestForgotPassword(
@@ -170,6 +192,8 @@ export class UserController {
     };
     return res.status(status).json({ ...response });
   }
+
+
 
   @Post('auth/forgot/verify')
   @UseGuards(VerifyResetLinkGuard)
