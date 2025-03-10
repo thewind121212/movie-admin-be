@@ -31,6 +31,7 @@ export async function getUser(
     const userDataClone = { ...userData };
     delete (userDataClone as Partial<User>).password;
     delete (userDataClone as Partial<User>).totpSecret;
+    delete (userDataClone as Partial<User>).recoveryCode;
 
 
 

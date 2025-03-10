@@ -14,6 +14,8 @@ export const LOGIN_EXT = '-LOGIN';
 export const REQUEST_2FA_TOTP = '-REQUEST_2FA_TOTPT';
 export const USER_S3_BUCKET = 'user';
 
+export const RECOVERY_CODE_AMOUNT = 6;
+
 export const tokenName = {
   REGISTER_REQUEST: 'x-register-token',
   FORGOT_PASSWORD: 'x-forgot-password-token',
