@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { REQUEST_2FA_TOTP, LOGIN_EXT } from '../../user.config';
+import { REQUEST_2FA_TOTP, LOGIN_EXT, RECOVERY_CODE_AMOUNT } from '../../user.config';
 import { UserRepositories } from '../../repositories/user.repositories';
 import { UserSecurity } from '../../security/user.security';
 import { User } from '@prisma/client';
@@ -55,7 +55,7 @@ export async function requestEnableTOTP(
 
     //get the recovery pass for 2fa
 
-    const recoveryPass = userSecurityServices.generateMutiRecoveryCodes(5)
+    const recoveryPass = userSecurityServices.generateMutiRecoveryCodes(RECOVERY_CODE_AMOUNT)
     //get thewrite to redis for temporary storage
     await userRepositories.writeToRedis(
       `${user.id}${REQUEST_2FA_TOTP}`,
