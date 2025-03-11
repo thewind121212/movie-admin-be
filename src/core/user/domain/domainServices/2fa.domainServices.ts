@@ -15,6 +15,7 @@ export async function requestEnableTOTP(
   isInternalError?: boolean;
   message: string;
   recoveryCodes?: string[];
+  serect?: string;
   qrCodeImageURL?: string;
 }> {
   try {
@@ -70,6 +71,7 @@ export async function requestEnableTOTP(
       isError: false,
       message: 'TOTP enabled successfully',
       recoveryCodes: recoveryPass.rawPass,
+      serect: genTOTP.secret,
       qrCodeImageURL: genTOTP.qrCodeImageURL,
     };
 

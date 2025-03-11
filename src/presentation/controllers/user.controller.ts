@@ -274,11 +274,12 @@ export class UserController {
     @Body() body: { email: string; password: string },
     @Response() res: ExpressResponse,
   ) {
-    const { status, message, qrCodeImageURL, recoveryCodes } =
+    const { status, message, qrCodeImageURL, recoveryCodes, serect } =
       await this.userService.requestEnableTOTP(body.email, body.password);
     const response: ResponseType = {
       message,
       data: {
+        serect: serect ? serect : '',
         recoveryCodes: recoveryCodes ? recoveryCodes : null,
         qrCodeImageURL: qrCodeImageURL ? qrCodeImageURL : null,
       },

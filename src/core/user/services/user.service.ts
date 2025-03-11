@@ -260,6 +260,7 @@ export class UserService {
     message: string;
     status: HttpStatus;
     qrCodeImageURL?: string;
+    serect?: string;
     recoveryCodes?: string[];
   }> {
     try {
@@ -286,6 +287,7 @@ export class UserService {
       return {
         message: enableTOTPResult.message,
         status: HttpStatus.CREATED,
+        serect: enableTOTPResult.serect,
         recoveryCodes: enableTOTPResult.recoveryCodes,
         qrCodeImageURL: enableTOTPResult.qrCodeImageURL,
       };

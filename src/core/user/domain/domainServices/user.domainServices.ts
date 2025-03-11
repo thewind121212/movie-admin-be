@@ -137,6 +137,7 @@ export class UserDomainServices {
     isError: boolean;
     isInternalError?: boolean;
     message: string;
+    serect?: string;
     recoveryCodes?: string[];
     qrCodeImageURL?: string;
   }> {
