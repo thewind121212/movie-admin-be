@@ -5,9 +5,11 @@ import {
   Response,
   HttpStatus,
   UseGuards,
+  Param,
   Request,
   Delete,
   Put,
+  Get,
 } from '@nestjs/common';
 import {
   Response as ExpressResponse,
@@ -463,6 +465,24 @@ export class UserController {
     });
 
   }
+
+  @Get('/getAll')
+  async getAllUser(
+    @Param() body: { limit: number, page: number , search: string},
+    @Response() res: ExpressResponse,
+  ) {
+    const { message, status, data } = await this.userService.getAllUsers();
+
+    const response: ResponseType = {
+      message,
+      data: data,
+      created_at: new Date(),
+    };
+
+    return res.status(status).json({ ...response });
+
+  }
+
 
 }
 

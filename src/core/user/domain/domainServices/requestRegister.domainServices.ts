@@ -83,8 +83,8 @@ export function approveRegisterRequest(email: string, userSecurityServices: User
                 email,
             },
             '3d',
-            'REGISTER_REQUEST',
-            false
+            "APPROVE_REGISTER_REQUEST",
+            true,
         );
 
         if (!signToken) {

@@ -9,6 +9,7 @@ import { forgotPassword, submitForgotPassword } from './forgotPass.domainService
 import { login, logout, register, changePassword } from './auth.domainServices'
 import { verifyTOTP, requestEnableTOTP, disableTOTP, enableTOTP } from './2fa.domainServices'
 import { getUser, editUser, uploadAvatar } from './profile.domainServices'
+import { getAllUsers } from './getUsers.domainSErvices';
 
 
 @Injectable()
@@ -166,7 +167,7 @@ export class UserDomainServices {
     isInternalError?: boolean;
     message: string;
   }> {
-    return await disableTOTP(userId, token, removeMethod ,this.userRepositories, this.userSecurityServices)
+    return await disableTOTP(userId, token, removeMethod, this.userRepositories, this.userSecurityServices)
   }
 
   async verifyTOTP(
@@ -223,4 +224,17 @@ export class UserDomainServices {
 
     return await uploadAvatar(userId, avatar, name, this.userRepositories, this.s3Service)
   }
+
+
+
+  async getAllUsers(): Promise<{
+    isError: boolean;
+    isInternalError?: boolean;
+    message: string;
+    users?: Partial<User>[];
+    total?: number;
+  }> {
+    return await getAllUsers(this.userRepositories)
+  }
+
 }

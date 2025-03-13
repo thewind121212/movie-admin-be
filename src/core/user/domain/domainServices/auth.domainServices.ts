@@ -26,6 +26,12 @@ export async function register(data: {
             name: data.name,
         });
 
+        //remove the key from redis for invalid  jwt token 
+
+        await userRepositories.removeKey(`${data.email}-APPROVE_REGISTER_REQUEST`);
+
+
+
         const emailContent = registerEmailTemplate(
             'Welcome to our platform!',
             'You have successfully registered with us. You can now login to your account.',

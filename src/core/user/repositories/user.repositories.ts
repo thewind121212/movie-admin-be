@@ -105,6 +105,45 @@ export class UserRepositories {
     }
   }
 
+
+  // get all user and total user
+  async getAllUser(): Promise<{
+    users: Partial<User>[];
+    total: number;
+  } | null> {
+    try {
+
+
+      const [users, total]  = await this.prisma.$transaction([
+        this.prisma.user.findMany(
+          {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              avatarUrl: true,
+              createdAt: true,
+              updatedAt: true,
+              timeZone: true,
+              country: true,
+            }
+          }
+        ),
+        this.prisma.user.count(),
+      ]);
+
+      return  {
+        users,
+        total,
+      }
+
+    } catch (error) {
+      this.logger.error(error);
+      return null;
+    }
+  }
+
+
   // update user
 
   async updateUser(

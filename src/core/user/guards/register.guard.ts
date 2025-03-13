@@ -63,7 +63,7 @@ export class RegisterGuard implements CanActivate {
     // validate token
     const tokenResult = await this.userSecurity.verifyJWT(
       token,
-      'REGISTER_REQUEST',
+      "APPROVE_REGISTER_REQUEST",
     );
     if (!tokenResult.isValid || email !== tokenResult.email) {
       throw new HttpException(

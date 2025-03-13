@@ -5,6 +5,7 @@ export type JWT_PURPOSE_TYPE =
   | 'FORGOT_PASSWORD'
   | 'REFRESH'
   | 'AUTHENTICATION'
+  | 'APPROVE_REGISTER_REQUEST'
 
   //for redis
 export const USER_PASSWORD_SALT_ROUND = 10;
