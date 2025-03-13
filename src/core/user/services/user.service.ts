@@ -301,7 +301,7 @@ export class UserService {
   }
 
 
-  async changePassword(payload: { currentPassword: string, newPassword : string ,userId:string }): Promise<{
+  async changePassword(payload: { currentPassword: string, newPassword: string, userId: string }): Promise<{
     message: string;
     status: HttpStatus;
   }> {
@@ -519,6 +519,7 @@ export class UserService {
     data: User | null;
     status: HttpStatus;
   }> {
+
     try {
       const getUserResult = await this.userDomainServices.getUser(userId);
 
@@ -635,6 +636,53 @@ export class UserService {
       console.log('Internal server error', error);
       return {
         message: 'Internal server error',
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      };
+    }
+
+  }
+
+  async getAllUsers(): Promise<{
+    message: string;
+    data: {
+      users: Partial<User>[];
+      total: number;
+    }
+    status: HttpStatus;
+  }> {
+
+    try {
+      const getAllUsersResult = await this.userDomainServices.getAllUsers();
+
+      if (getAllUsersResult.isInternalError) {
+        return {
+          message: 'Internal server error',
+          data: {
+            users: [],
+            total: 0,
+          },
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+        };
+      }
+
+
+      return {
+        message: getAllUsersResult.message,
+        data: {
+          users: getAllUsersResult.users || [],
+          total: getAllUsersResult.total || 0,
+        },
+        status: HttpStatus.OK,
+      }
+
+    } catch (error) {
+      console.log('Internal server error', error);
+      return {
+        message: 'Internal server error',
+        data: {
+          users: [],
+          total: 0,
+        },
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       };
     }

@@ -48,7 +48,7 @@ export class ValidateTokenRegisterRequestGuard implements CanActivate {
           message: message,
         },
         HttpStatus.BAD_REQUEST,
-      );
+      ); 
     }
 
     if (!email) {
