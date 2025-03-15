@@ -9,7 +9,7 @@ import { forgotPassword, submitForgotPassword } from './forgotPass.domainService
 import { login, logout, register, changePassword } from './auth.domainServices'
 import { verifyTOTP, requestEnableTOTP, disableTOTP, enableTOTP } from './2fa.domainServices'
 import { getUser, editUser, uploadAvatar } from './profile.domainServices'
-import { getAllUsers } from './getUsers.domainSErvices';
+import { getAllUsers } from './getUsers.domainServices';
 
 
 @Injectable()
@@ -227,14 +227,22 @@ export class UserDomainServices {
 
 
 
-  async getAllUsers(): Promise<{
+  async getAllUsers({
+    page,
+    limit,
+    search,
+  }: {
+    page: number;
+    limit: number;
+    search: string;
+  }): Promise<{
     isError: boolean;
     isInternalError?: boolean;
     message: string;
     users?: Partial<User>[];
     total?: number;
   }> {
-    return await getAllUsers(this.userRepositories)
+    return await getAllUsers(this.userRepositories, { page, limit, search })
   }
 
 }

@@ -1,7 +1,15 @@
 import { User } from "@prisma/client";
 import { UserRepositories } from "../../repositories/user.repositories";
 
-export async function getAllUsers(userRepositories : UserRepositories): Promise<{
+export async function getAllUsers(userRepositories : UserRepositories, {
+  page,
+  limit,
+  search,
+} : {
+  page: number;
+  limit: number;
+  search: string;
+}): Promise<{
     isError: boolean;
     isInternalError?: boolean;
     message: string;
@@ -10,7 +18,7 @@ export async function getAllUsers(userRepositories : UserRepositories): Promise<
   }> {
 
     try {
-    const allUser = await userRepositories.getAllUser()
+    const allUser = await userRepositories.getAllUser({page, limit, search})
     if (!allUser) {
       return {
         isError: true,

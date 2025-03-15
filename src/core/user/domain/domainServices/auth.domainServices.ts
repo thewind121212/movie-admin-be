@@ -30,13 +30,14 @@ export async function register(data: {
 
         await userRepositories.removeKey(`${data.email}-APPROVE_REGISTER_REQUEST`);
 
+        await userRepositories.findAndUpdateRegisterRequest(data.email, true)
+
 
 
         const emailContent = registerEmailTemplate(
             'Welcome to our platform!',
             'You have successfully registered with us. You can now login to your account.',
         );
-
         const mailOptions = {
             from: 'admin@wliafdew.dev',
             to: data.email,
