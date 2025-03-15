@@ -72,6 +72,7 @@ model User {
 model RegistrationRequests {
   id        String   @id @default(cuid())  
   email     String   @unique
+  isRegistered Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 }

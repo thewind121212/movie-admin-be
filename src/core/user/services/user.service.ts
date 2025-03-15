@@ -642,7 +642,15 @@ export class UserService {
 
   }
 
-  async getAllUsers(): Promise<{
+  async getAllUsers({
+    page,
+    limit,
+    search,
+  }: {
+    page: number;
+    limit: number;
+    search: string;
+  }): Promise<{
     message: string;
     data: {
       users: Partial<User>[];
@@ -652,7 +660,12 @@ export class UserService {
   }> {
 
     try {
-      const getAllUsersResult = await this.userDomainServices.getAllUsers();
+
+      const getAllUsersResult = await this.userDomainServices.getAllUsers({
+        page,
+        limit,
+        search : search.trim()
+      });
 
       if (getAllUsersResult.isInternalError) {
         return {

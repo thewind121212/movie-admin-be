@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/Infrastructure/prisma-client/prisma-client.service';
-import { RegistrationRequests, User } from '@prisma/client';
+import { RegistrationRequests, User, Prisma } from '@prisma/client';
 import { RedisService } from 'src/Infrastructure/redis/redis.service';
 import ms from 'ms';
 
@@ -54,7 +54,13 @@ export class UserRepositories {
   // find and up request
   async findAndUpdateRegisterRequest(
     email: string,
+    isRegister?: boolean,
   ): Promise<RegistrationRequests | null> {
+
+    const isRegisterRequest = isRegister ? {
+      isRegister: isRegister
+    } : {};
+
     try {
       const registerRequest = await this.prisma.registrationRequests.update({
         where: {
@@ -62,6 +68,7 @@ export class UserRepositories {
         },
         data: {
           updatedAt: new Date(),
+          ...isRegisterRequest
         },
       });
       return registerRequest;
@@ -107,32 +114,126 @@ export class UserRepositories {
 
 
   // get all user and total user
-  async getAllUser(): Promise<{
+  async getAllUser({
+    page,
+    limit,
+    search,
+  }: {
+    page: number;
+    limit: number;
+    search: string;
+  }): Promise<{
     users: Partial<User>[];
     total: number;
   } | null> {
     try {
 
 
-      const [users, total]  = await this.prisma.$transaction([
-        this.prisma.user.findMany(
-          {
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              avatarUrl: true,
-              createdAt: true,
-              updatedAt: true,
-              timeZone: true,
-              country: true,
-            }
-          }
-        ),
-        this.prisma.user.count(),
-      ]);
 
-      return  {
+      const query = {
+        OR: [
+          {
+            email: {
+              contains: search,
+              mode: Prisma.QueryMode.insensitive,
+            },
+          },
+          {
+            name: {
+              contains: search,
+              mode: Prisma.QueryMode.insensitive,
+            },
+          },
+        ]
+      }
+
+      console.log('search', search);
+
+      let pageProcessed = page;
+
+      const total = await this.prisma.user.count({
+        where: query,
+      })
+
+      const maxPage = Math.ceil(total / limit);
+
+      if (total > ((page - 1) * limit)) {
+        pageProcessed = page;
+      } else {
+        pageProcessed = maxPage;
+      }
+
+      console.log(pageProcessed, maxPage);
+
+
+      const getRange = (pageProcessed * limit) -  (pageProcessed - 1) * limit
+
+      console.log('getRange', getRange);
+
+      const mainpage =   Math.floor(getRange / 101);
+
+      const getSortSetUser = await this.redis.zrangeUser('user:page' + (mainpage + 1), (pageProcessed - 1) * limit, getRange - 1);
+
+      console.log('getSortSetUser', getSortSetUser);
+      console.log(mainpage);
+
+      // retrieve the cache from redis
+      if (getSortSetUser.length > 0) {
+        const userResults = await Promise.all(getSortSetUser.map(async (userId: string) => {
+          const user = await this.redis.getUserCache('user' + '-' + userId);
+          if (!user) {
+            return null;
+          }
+          return JSON.parse(user) as User;
+        }));
+
+        const users: User[] = userResults.filter((user): user is User => user !== null);
+
+        return {
+          users: users,
+          total,
+        }
+      }
+
+
+
+
+      const users = await this.prisma.user.findMany(
+        {
+          take: 100,
+          skip: mainpage * 100,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            avatarUrl: true,
+            createdAt: true,
+            updatedAt: true,
+            timeZone: true,
+            country: true,
+          },
+          orderBy: {
+            updatedAt: 'desc'
+          },
+          where: query,
+        }
+      )
+
+
+      //create the sort set for user
+      for (let i = 0; i < users.length; i++) {
+        void this.redis.zaddUser('user:page' + (mainpage + 1), users[i].updatedAt.getTime(), users[i].id);
+      }
+
+      //caching the page and limit to redis 
+      for (let i = 0; i < users.length; i++) {
+        void this.redis.setUserCache('user' + '-' + users[i].id, JSON.stringify(users[i]));
+      }
+
+
+
+
+      return {
         users,
         total,
       }
@@ -155,6 +256,7 @@ export class UserRepositories {
     mutipleData?: User,
   ): Promise<User | null> {
     try {
+
       if (mutiple) {
         const user = await this.prisma.user.update({
           where: userId ? { id: userId } : { email },
@@ -162,6 +264,9 @@ export class UserRepositories {
             ...mutipleData
           },
         });
+
+        console.log(user)
+        await this.redis.zaddUser('user', Number(user.updatedAt.getTime()), user.id);
         return user
       }
 
@@ -171,6 +276,8 @@ export class UserRepositories {
           [field]: updateData,
         },
       });
+
+      await this.redis.zaddUser('user', user.updatedAt.getTime(), user.id);
 
       return user;
 
@@ -243,4 +350,5 @@ export class UserRepositories {
       return null;
     }
   }
+
 }

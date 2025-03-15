@@ -5,11 +5,11 @@ import {
   Response,
   HttpStatus,
   UseGuards,
-  Param,
   Request,
   Delete,
   Put,
   Get,
+  Query,
 } from '@nestjs/common';
 import {
   Response as ExpressResponse,
@@ -18,6 +18,7 @@ import {
 import { UserService } from 'src/core/user/services/user.service';
 import { ResponseType } from 'src/interface/response.interface';
 //guard
+import { GetUserGuard } from 'src/core/user/guards/getUser.guard';
 import { RegisterRequestGuard } from 'src/core/user/guards/registerRequest.guard';
 import { ApproveRegisterRequestGuard } from 'src/core/user/guards/approveRegisterRequest.guard';
 import { ValidateTokenRegisterRequestGuard } from 'src/core/user/guards/validateJWTRegisterRequest.guard';
@@ -32,7 +33,7 @@ import { requestTOTPGuard } from 'src/core/user/guards/requestTOTP.guard';
 import { verifyTOTPGuard } from 'src/core/user/guards/verifyTOTP.guard';
 import { tokenName } from 'src/core/user/user.config';
 import { IsValidAccessTokenGuard } from 'src/core/user/guards/isvalidAccessToken.guard';
-import { getUserGuard } from 'src/core/user/guards/getUser.guard';
+import { getProfileGuard } from 'src/core/user/guards/getProfile.guard';
 import { editUserGuard } from 'src/core/user/guards/editUserGuard.guard';
 import formidable from 'formidable';
 import { ChangePassGuard } from 'src/core/user/guards/changePassword.guard';
@@ -372,7 +373,7 @@ export class UserController {
 
 
   @Post('/getUser')
-  @UseGuards(getUserGuard)
+  @UseGuards(getProfileGuard)
   async getUserProfile(
     @Body() body: { userId: string },
     @Response() res: ExpressResponse,
@@ -467,17 +468,28 @@ export class UserController {
   }
 
   @Get('/getAll')
+  @UseGuards(GetUserGuard)
   async getAllUser(
-    @Param() body: { limit: number, page: number , search: string},
+    @Query() query: { limit: number, page: number , search: string},
     @Response() res: ExpressResponse,
   ) {
-    const { message, status, data } = await this.userService.getAllUsers();
+
+
+    const { limit, page, search } = query
+
+
+    const { message, status, data } = await this.userService.getAllUsers({
+      limit: Number(limit) || 10,
+      page: Number(page) || 1,
+      search: search || '',
+    });
 
     const response: ResponseType = {
       message,
       data: data,
       created_at: new Date(),
     };
+
 
     return res.status(status).json({ ...response });
 

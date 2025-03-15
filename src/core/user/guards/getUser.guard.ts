@@ -1,4 +1,5 @@
 
+
 import {
     Injectable,
     CanActivate,
@@ -8,17 +9,46 @@ import {
 } from '@nestjs/common';
 
 @Injectable()
-export class getUserGuard implements CanActivate {
+export class GetUserGuard implements CanActivate {
     canActivate(context: ExecutionContext): boolean {
         const request = context.switchToHttp().getRequest();
-        const { userId } = request.body;
+        const queryParams: { limit: string, page: string, search?: string } = request.query;
 
-        if (!userId) {
+
+        const allowLimit = [10, 20, 50, 100];
+
+
+        const { limit, page } = queryParams;
+
+        if (isNaN(Number(limit)) || isNaN(Number(page))) {
             throw new HttpException(
                 {
                     status: 'fail',
                     data: null,
-                    message: 'Missing required fields',
+                    message: 'Limit and Page should be a number',
+                },
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
+
+        if (!allowLimit.includes(Number(limit))) {
+            throw new HttpException(
+                {
+                    status: 'fail',
+                    data: null,
+                    message: 'Limit should be 10, 20, 50, or 100',
+                },
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
+        if (Number(page) < 1) {
+            throw new HttpException(
+                {
+                    status: 'fail',
+                    data: null,
+                    message: 'Page should be greater than 1',
                 },
                 HttpStatus.BAD_REQUEST,
             );
